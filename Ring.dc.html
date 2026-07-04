@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:{{ size }}px;height:{{ size }}px;display:grid;place-items:center;flex:0 0 auto;">
+  <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 120 120" style="transform:rotate(-90deg);overflow:visible;">
+    <circle cx="60" cy="60" r="{{ r }}" fill="none" stroke="{{ track }}" stroke-width="{{ thickness }}" stroke-linecap="round"></circle>
+    <circle cx="60" cy="60" r="{{ r }}" fill="none" stroke="{{ color }}" stroke-width="{{ thickness }}" stroke-linecap="round" stroke-dasharray="{{ dash }}" style="transition:stroke-dasharray .8s cubic-bezier(.2,.9,.2,1);filter:drop-shadow(0 0 7px {{ glow }});"></circle>
+  </svg>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;">
+    <div style="display:flex;align-items:baseline;gap:2px;line-height:1;">
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--ink);font-size:{{ bigSize }}px;letter-spacing:-.02em;">{{ big }}</span>
+      <span style="font-weight:700;color:var(--ink-2);font-size:{{ unitSize }}px;">{{ unit }}</span>
+    </div>
+    <span style="font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-size:{{ subSize }}px;margin-top:6px;">{{ sub }}</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:160,&quot;height&quot;:160},&quot;value&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.72,&quot;min&quot;:0,&quot;max&quot;:1,&quot;step&quot;:0.01,&quot;tsType&quot;:&quot;number&quot;},&quot;big&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string|number&quot;},&quot;unit&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sub&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Battery&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;color&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;var(--primary)&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:150,&quot;min&quot;:80,&quot;max&quot;:320,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const size = Number(p.size) || 150;
+    const thickness = Number(p.thickness) || (size < 120 ? 9 : 12);
+    const r = 60 - thickness / 2 - 2;
+    const circ = 2 * Math.PI * r;
+    let v = Number(p.value);
+    if (!isFinite(v)) v = 0;
+    v = Math.max(0, Math.min(1, v));
+    const dash = (v * circ).toFixed(2) + ' ' + (circ + 4).toFixed(2);
+    return {
+      size, thickness, r: r.toFixed(2), dash,
+      color: p.color || 'var(--primary)',
+      track: p.track || 'var(--ring-track)',
+      glow: p.glow || 'transparent',
+      big: (p.big != null && p.big !== '') ? p.big : Math.round(v * 100),
+      unit: p.unit != null ? p.unit : '%',
+      sub: p.sub || '',
+      bigSize: p.bigSize || Math.round(size * 0.235),
+      unitSize: p.unitSize || Math.round(size * 0.115),
+      subSize: p.subSize || Math.max(9, Math.round(size * 0.072)),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#0a0f0c}
+.ms{font-family:'Material Symbols Rounded';font-weight:500;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--ink-3);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+@keyframes screenin{0%{opacity:0;transform:translateY(14px) scale(.994)}100%{opacity:1;transform:none}}
+@keyframes floaty{0%{transform:translate(0,0)}50%{transform:translate(26px,-28px)}100%{transform:translate(0,0)}}
+@keyframes floaty2{0%{transform:translate(0,0)}50%{transform:translate(-30px,22px)}100%{transform:translate(0,0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+@keyframes ping{0%{transform:scale(.9);opacity:.5}100%{transform:scale(2.9);opacity:0}}
+@keyframes scan{0%{transform:translateY(-12%)}100%{transform:translateY(1150%)}}
+@keyframes popcard{0%{opacity:0;transform:translateY(22px) scale(.96)}100%{opacity:1;transform:none}}
+@keyframes rotate{to{transform:rotate(360deg)}}
+@keyframes glowpulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes riseIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+  <sc-if value="{{ motionOK }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;top:-160px;left:-120px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,var(--orb1),transparent 68%);filter:blur(30px);animation:floaty 18s ease-in-out infinite;pointer-events:none;z-index:0;"></div>
+  <div style="position:absolute;top:30%;right:-180px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,var(--orb2),transparent 68%);filter:blur(34px);animation:floaty2 22s ease-in-out infinite;pointer-events:none;z-index:0;"></div>
+  <div style="position:absolute;bottom:-200px;left:24%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--orb3),transparent 70%);filter:blur(38px);animation:floaty 26s ease-in-out infinite;pointer-events:none;z-index:0;"></div>
+  </sc-if>
+
+  <!-- ================= SIMPLE (FARMER) VIEW ================= -->
+  <sc-if value="{{ isSimple }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;max-width:1100px;margin:0 auto;padding:20px;gap:20px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:17px;background:var(--primary);display:grid;place-items:center;box-shadow:var(--shadow);flex:0 0 auto;"><span class="ms fill" style="font-size:30px;color:var(--primary-ink);">eco</span></div>
+      <div style="min-width:0;flex:1;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink);line-height:1;">BananaGuard</div>
+        <div style="font-size:15px;font-weight:600;color:var(--ink-2);margin-top:4px;">{{ nodeName }} · {{ nodeBlock }}</div>
+      </div>
+      <button onClick="{{ onAdvanced }}" style="border:none;cursor:pointer;background:var(--surface);color:var(--ink);border:1px solid var(--glass-brd);border-radius:999px;padding:13px 20px;font-family:'Manrope',sans-serif;font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);">Advanced<span class="ms" style="font-size:20px;">arrow_forward</span></button>
+    </div>
+
+    <div style="position:relative;overflow:hidden;border-radius:34px;padding:40px 34px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+      <div style="position:absolute;inset:0;background:{{ statusTint }};pointer-events:none;"></div>
+      <div style="position:relative;flex:0 0 auto;width:168px;height:168px;border-radius:50%;display:grid;place-items:center;background:{{ statusColorSoft }};">
+        <div style="position:absolute;inset:0;border-radius:50%;border:3px solid {{ statusColor }};opacity:.35;"></div>
+        <div style="position:absolute;width:100%;height:100%;border-radius:50%;border:3px solid {{ statusColor }};animation:ping 2.6s ease-out infinite;"></div>
+        <span class="ms fill" style="font-size:88px;color:{{ statusColor }};">{{ statusIcon }}</span>
+      </div>
+      <div style="position:relative;flex:1 1 300px;min-width:260px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="width:11px;height:11px;border-radius:50%;background:var(--bad);animation:pulse 1.4s infinite;"></span><span style="font-weight:800;font-size:14px;letter-spacing:.14em;color:var(--ink-2);">{{ tLive }}</span></div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:64px;line-height:.95;color:{{ statusColor }};letter-spacing:-.02em;">{{ tStatusWord }}</div>
+        <div style="font-size:23px;font-weight:600;color:var(--ink);margin-top:14px;max-width:520px;line-height:1.32;text-wrap:pretty;">{{ tStatusPlain }}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">
+      <div style="border-radius:28px;padding:26px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+        <div style="display:flex;align-items:center;gap:9px;color:var(--ink-2);"><span class="ms fill" style="font-size:26px;color:var(--ok);">battery_charging_full</span><span style="font-weight:700;font-size:17px;">{{ tBattery }}</span></div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:66px;line-height:1;color:var(--ink);margin-top:12px;">{{ battInt }}<span style="font-size:32px;color:var(--ink-2);">%</span></div>
+        <div style="height:16px;border-radius:999px;background:var(--ring-track);margin-top:14px;overflow:hidden;"><div style="height:100%;width:{{ battPct }};border-radius:999px;background:var(--ok);transition:width .8s cubic-bezier(.2,.9,.2,1);"></div></div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink-2);margin-top:12px;">{{ tDaysLeft }}</div>
+      </div>
+      <div style="border-radius:28px;padding:26px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+        <div style="display:flex;align-items:center;gap:9px;color:var(--ink-2);"><span class="ms fill" style="font-size:26px;color:{{ pestColor }};">pest_control</span><span style="font-weight:700;font-size:17px;">{{ tPestLabel }}</span></div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:56px;line-height:1.02;color:{{ pestColor }};margin-top:12px;">{{ tPestLevel }}</div>
+        <div style="display:flex;gap:7px;margin-top:16px;">
+          <div style="flex:1;height:16px;border-radius:8px;background:{{ pestSeg1 }};"></div>
+          <div style="flex:1;height:16px;border-radius:8px;background:{{ pestSeg2 }};"></div>
+          <div style="flex:1;height:16px;border-radius:8px;background:{{ pestSeg3 }};"></div>
+        </div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink-2);margin-top:12px;">{{ tPestDetail }}</div>
+      </div>
+      <div style="border-radius:28px;padding:26px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+        <div style="display:flex;align-items:center;gap:9px;color:var(--ink-2);"><span class="ms fill" style="font-size:26px;color:var(--secondary);">water_drop</span><span style="font-weight:700;font-size:17px;">{{ tSoil }}</span></div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:56px;line-height:1.02;color:{{ gateColor }};margin-top:12px;">{{ tGateWord }}</div>
+        <div style="height:16px;border-radius:999px;background:var(--ring-track);margin-top:16px;overflow:hidden;"><div style="height:100%;width:{{ moistPct }};border-radius:999px;background:var(--secondary);transition:width .8s;"></div></div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink-2);margin-top:12px;">{{ tSoilDetail }}</div>
+      </div>
+    </div>
+
+    <div style="position:relative;overflow:hidden;border-radius:30px;padding:28px 30px;background:var(--primary);box-shadow:var(--shadow);display:flex;align-items:center;gap:22px;flex-wrap:wrap;">
+      <span class="ms fill" style="font-size:56px;color:var(--primary-ink);opacity:.92;">compost</span>
+      <div style="flex:1 1 240px;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;line-height:1;color:var(--primary-ink);">{{ tPesticide }}</div>
+        <div style="font-size:19px;font-weight:600;color:var(--primary-ink);opacity:.86;margin-top:8px;">{{ tImpact }}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
+      <button onClick="{{ onSimpleCamera }}" style="cursor:pointer;border:none;border-radius:26px;padding:24px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;text-align:left;">
+        <span class="ms fill" style="font-size:38px;color:var(--secondary);">photo_camera</span>
+        <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--ink);">{{ tCam }}</div><div style="font-size:15px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ tCamSub }}</div></div>
+      </button>
+      <button onClick="{{ onOpenAlerts }}" style="cursor:pointer;border:none;border-radius:26px;padding:24px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;text-align:left;">
+        <span class="ms fill" style="font-size:38px;color:var(--tertiary);">notifications</span>
+        <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--ink);">{{ tAlerts }}</div><div style="font-size:15px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ tAlertsSub }}</div></div>
+      </button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ================= ADVANCED APP ================= -->
+  <sc-if value="{{ isAdvanced }}" hint-placeholder-val="{{ true }}">
+  <div style="position:relative;z-index:2;display:flex;min-height:100vh;">
+
+    <!-- SIDE NAV -->
+    <sc-if value="{{ sideNav }}" hint-placeholder-val="{{ true }}">
+    <div style="width:{{ navWidth }}px;flex:0 0 auto;position:sticky;top:0;height:100vh;padding:18px 14px;display:flex;flex-direction:column;gap:6px;background:var(--nav);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-right:1px solid var(--glass-brd);z-index:5;">
+      <div style="display:flex;align-items:center;gap:11px;padding:8px 8px 16px;">
+        <div style="width:42px;height:42px;border-radius:14px;background:var(--primary);display:grid;place-items:center;flex:0 0 auto;box-shadow:0 6px 16px var(--accent-glow);"><span class="ms fill" style="font-size:26px;color:var(--primary-ink);">eco</span></div>
+        <sc-if value="{{ navLabels }}" hint-placeholder-val="{{ true }}"><div style="min-width:0;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:var(--ink);line-height:1;">BananaGuard</div><div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-top:3px;letter-spacing:.02em;">Edge-AI Pest Sentinel</div></div></sc-if>
+      </div>
+      <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="6">
+        <button onClick="{{ item.onClick }}" title="{{ item.label }}" style="{{ item.navStyle }}"><span class="ms {{ item.fillClass }}" style="font-size:23px;color:{{ item.fg }};flex:0 0 auto;">{{ item.icon }}</span><sc-if value="{{ navLabels }}" hint-placeholder-val="{{ true }}"><span style="font-weight:700;font-size:15px;color:{{ item.fg }};">{{ item.label }}</span></sc-if><sc-if value="{{ item.showBadge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--bad);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;">{{ item.badge }}</span></sc-if></button>
+      </sc-for>
+      <div style="flex:1;"></div>
+      <button onClick="{{ onGoSettings }}" title="Settings" style="{{ settingsNavStyle }}"><span class="ms" style="font-size:23px;color:{{ settingsFg }};">settings</span><sc-if value="{{ navLabels }}" hint-placeholder-val="{{ true }}"><span style="font-weight:700;font-size:15px;color:{{ settingsFg }};">Settings</span></sc-if></button>
+      <sc-if value="{{ navLabels }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;gap:6px;padding:8px;margin-top:4px;border-radius:16px;background:var(--surface-2);">
+        <button onClick="{{ onSimple }}" style="flex:1;cursor:pointer;border:none;background:transparent;color:var(--ink-2);font-weight:700;font-size:13px;padding:8px;border-radius:11px;font-family:'Manrope',sans-serif;">Simple</button>
+        <button style="flex:1;cursor:default;border:none;background:var(--primary);color:var(--primary-ink);font-weight:700;font-size:13px;padding:8px;border-radius:11px;font-family:'Manrope',sans-serif;">Advanced</button>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- MAIN COLUMN -->
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+      <!-- TOP BAR -->
+      <div style="position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:12px {{ pad }}px;background:var(--topbar);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-bottom:1px solid var(--glass-brd);">
+        <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <div style="width:38px;height:38px;border-radius:12px;background:var(--primary);display:grid;place-items:center;flex:0 0 auto;"><span class="ms fill" style="font-size:23px;color:var(--primary-ink);">eco</span></div>
+        </sc-if>
+        <button onClick="{{ onOpenNodes }}" style="cursor:pointer;border:none;display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--glass-brd);border-radius:999px;padding:8px 8px 8px 13px;min-width:0;">
+          <span style="width:9px;height:9px;border-radius:50%;background:{{ statusColor }};flex:0 0 auto;box-shadow:0 0 8px {{ statusColor }};"></span>
+          <div style="min-width:0;text-align:left;"><div style="font-weight:800;font-size:13px;color:var(--ink);line-height:1;white-space:nowrap;">{{ nodeId }} · {{ nodeName }}</div></div>
+          <span class="ms" style="font-size:19px;color:var(--ink-3);">expand_more</span>
+        </button>
+        <div style="flex:1;"></div>
+        <div style="display:none;"></div>
+        <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 15px;border-radius:999px;background:{{ statusColorSoft }};border:1px solid {{ statusColor }};">
+          <span class="ms fill" style="font-size:19px;color:{{ statusColor }};">{{ statusIcon }}</span>
+          <span style="font-weight:800;font-size:13px;color:{{ statusColor }};letter-spacing:.03em;">{{ statusWord }}</span>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--surface-2);">
+          <button onClick="{{ onSimple }}" style="cursor:pointer;border:none;background:transparent;color:var(--ink-2);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;font-family:'Manrope',sans-serif;">Simple</button>
+          <button style="cursor:default;border:none;background:var(--surface);color:var(--ink);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;font-family:'Manrope',sans-serif;box-shadow:var(--shadow);">Advanced</button>
+        </div>
+        </sc-if>
+        <button onClick="{{ onTogglePause }}" title="Live data" style="cursor:pointer;border:none;background:var(--surface-2);border:1px solid var(--glass-brd);border-radius:999px;height:40px;padding:0 14px;display:flex;align-items:center;gap:8px;">
+          <span style="width:9px;height:9px;border-radius:50%;background:{{ liveDotColor }};{{ liveDotAnim }}"></span><span style="font-weight:800;font-size:12px;color:var(--ink-2);letter-spacing:.06em;">{{ liveLabel }}</span>
+        </button>
+        <button onClick="{{ onOpenTheme }}" title="Theme" style="cursor:pointer;border:none;background:var(--surface-2);border:1px solid var(--glass-brd);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;"><span class="ms" style="font-size:21px;color:var(--ink-2);">palette</span></button>
+        <button onClick="{{ onOpenAlerts }}" title="Alerts" style="cursor:pointer;border:none;background:var(--surface-2);border:1px solid var(--glass-brd);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;position:relative;"><span class="ms" style="font-size:21px;color:var(--ink-2);">notifications</span><sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:7px;right:8px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--bad);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;border:2px solid var(--surface);">{{ unread }}</span></sc-if></button>
+        <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onOpenMore }}" style="cursor:pointer;border:none;background:var(--surface-2);border:1px solid var(--glass-brd);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;"><span class="ms" style="font-size:22px;color:var(--ink-2);">more_horiz</span></button>
+        </sc-if>
+      </div>
+
+      <!-- CONTENT -->
+      <div style="flex:1;overflow-y:auto;">
+        <div style="max-width:1440px;margin:0 auto;padding:{{ pad }}px {{ pad }}px {{ padBottom }}px;">
+
+          <!-- OVERVIEW -->
+          <sc-if value="{{ showOverview }}" hint-placeholder-val="{{ true }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
+              <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Overview</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ nodeId }} · {{ nodeName }} — {{ nodeBlock }} · updated {{ clock }}</div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><span class="ms" style="font-size:18px;color:var(--secondary);">router</span><span style="font-weight:700;font-size:13px;color:var(--ink-2);">ESP32-C6 · MobileNetV2 · LoRaWAN SF{{ sf }}</span></div>
+            </div>
+
+            <!-- HERO ROW -->
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+              <div style="flex:1 1 440px;min-width:280px;position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:26px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="position:absolute;inset:0;background:{{ statusTint }};pointer-events:none;"></div>
+                <div style="position:relative;display:flex;align-items:center;gap:22px;flex-wrap:wrap;">
+                  <div style="position:relative;flex:0 0 auto;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:{{ statusColorSoft }};">
+                    <div style="position:absolute;inset:0;border-radius:50%;border:2px solid {{ statusColor }};animation:ping 2.8s ease-out infinite;"></div>
+                    <span class="ms fill" style="font-size:60px;color:{{ statusColor }};">{{ statusIcon }}</span>
+                  </div>
+                  <div style="flex:1 1 220px;min-width:200px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="width:9px;height:9px;border-radius:50%;background:var(--bad);animation:pulse 1.4s infinite;"></span><span style="font-weight:800;font-size:12px;letter-spacing:.1em;color:var(--ink-3);">LIVE STATUS</span></div>
+                    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:44px;line-height:1;color:{{ statusColor }};letter-spacing:-.02em;">{{ statusWord }}</div>
+                    <div style="font-size:16px;font-weight:600;color:var(--ink);margin-top:10px;max-width:440px;line-height:1.4;text-wrap:pretty;">{{ statusPlain }}</div>
+                  </div>
+                </div>
+                <div style="position:relative;display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;">
+                  <div style="flex:1 1 150px;padding:14px 16px;border-radius:18px;background:var(--surface-2);">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Pest window</span><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--ink);">{{ pestWindow }}<span style="color:var(--ink-3);font-size:12px;"> / {{ eilInt }} EIL</span></span></div>
+                    <div style="height:8px;border-radius:999px;background:var(--ring-track);margin-top:9px;overflow:hidden;"><div style="height:100%;width:{{ ratioPct }};border-radius:999px;background:{{ pestColor }};transition:width .8s cubic-bezier(.2,.9,.2,1);"></div></div>
+                  </div>
+                  <div style="flex:1 1 130px;padding:14px 16px;border-radius:18px;background:var(--surface-2);display:flex;align-items:center;gap:11px;">
+                    <span class="ms fill" style="font-size:26px;color:{{ gateColor }};">{{ gateIcon }}</span>
+                    <div><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Soil gate</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:{{ gateColor }};">{{ gateState }}</div></div>
+                  </div>
+                  <div style="flex:1 1 130px;padding:14px 16px;border-radius:18px;background:var(--surface-2);display:flex;align-items:center;gap:11px;">
+                    <span class="ms fill" style="font-size:26px;color:var(--secondary);">sprinkler</span>
+                    <div><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Sprays today</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--ink);">{{ spraysToday }} · {{ litersToday }} L</div></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CAMERA PEEK -->
+              <button onClick="{{ onGoDetections }}" style="cursor:pointer;text-align:left;border:1px solid var(--glass-brd);flex:1 1 300px;min-width:260px;position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:0;background:#0c130d;box-shadow:var(--shadow);min-height:220px;display:flex;">
+                <div style="position:absolute;inset:0;background:linear-gradient(150deg,#1c3a1e,#0f2411 55%,#08150a);"></div>
+                <div style="position:absolute;inset:0;background:radial-gradient(60% 50% at 30% 30%,rgba(120,200,110,.28),transparent 70%),radial-gradient(50% 60% at 75% 70%,rgba(80,160,90,.22),transparent 70%);"></div>
+                <div style="position:absolute;left:0;right:0;height:52px;background:linear-gradient(180deg,rgba(120,240,150,.5),transparent);filter:blur(2px);animation:scan 3.4s linear infinite;"></div>
+                <div style="position:absolute;left:16%;top:26%;width:30%;height:34%;border:2px solid var(--secondary);border-radius:10px;box-shadow:0 0 0 2px rgba(0,0,0,.25);"><span style="position:absolute;top:-22px;left:-2px;background:var(--secondary);color:#062;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;color:#04212a;">Thrips 0.93</span></div>
+                <div style="position:absolute;right:20%;bottom:24%;width:24%;height:26%;border:2px solid var(--tertiary);border-radius:10px;"><span style="position:absolute;top:-22px;left:-2px;background:var(--tertiary);color:#3a2600;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;">Aphid 0.81</span></div>
+                <div style="position:relative;align-self:flex-start;margin:14px;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span style="width:8px;height:8px;border-radius:50%;background:#ff5a5a;animation:pulse 1.4s infinite;"></span><span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.08em;">CAM · LIVE</span></div>
+                <div style="position:absolute;left:0;right:0;bottom:0;padding:14px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(0deg,rgba(0,0,0,.6),transparent);"><div><div style="color:#fff;font-weight:800;font-size:15px;">Detections</div><div style="color:rgba(255,255,255,.72);font-size:12px;font-weight:600;">{{ pestNowInt }} targets · {{ latency }} ms inference</div></div><span class="ms" style="font-size:22px;color:#fff;">arrow_forward</span></div>
+              </button>
+            </div>
+
+            <!-- METRIC GRID -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(226px,1fr));gap:16px;">
+              <!-- pest pressure -->
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--tertiary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--tertiary-c-ink);">pest_control</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">Pest pressure</span></div>
+                <div style="display:flex;align-items:baseline;gap:6px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:38px;color:var(--ink);line-height:1;">{{ pestWindow }}</span><span style="font-weight:700;font-size:14px;color:var(--ink-3);">/ {{ eilInt }} threshold</span></div>
+                <svg viewBox="0 0 100 32" preserveAspectRatio="none" width="100%" height="40" style="display:block;margin-top:10px;overflow:visible;"><path d="{{ pestSpark.area }}" fill="var(--tertiary)" opacity=".14"></path><polyline points="{{ pestSpark.line }}" fill="none" stroke="var(--tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+                <div style="font-size:12px;font-weight:700;color:{{ pestColor }};margin-top:6px;">{{ pestLevel }} · 30-min window</div>
+              </div>
+              <!-- battery -->
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;">
+                <div style="display:flex;align-items:center;gap:10px;align-self:flex-start;margin-bottom:8px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--ok-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--ok);">battery_charging_full</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">Battery</span></div>
+                <dc-import name="Ring" value="{{ battFrac }}" big="{{ battInt }}" unit="%" sub="Charge" color="var(--ok)" glow="var(--accent-glow)" size="132" hint-size="132px,132px"></dc-import>
+                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:8px;">≈ {{ autonomy }} days autonomy · +{{ solarIn }} W solar</div>
+              </div>
+              <!-- soil -->
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;">
+                <div style="display:flex;align-items:center;gap:10px;align-self:flex-start;margin-bottom:8px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--secondary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--secondary-c-ink);">humidity_mid</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">Soil moisture</span></div>
+                <dc-import name="Ring" value="{{ moistFrac }}" big="{{ moistInt }}" unit="%" sub="Moisture" color="var(--secondary)" size="132" hint-size="132px,132px"></dc-import>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:5px 11px;border-radius:999px;background:{{ gateColorSoft }};"><span class="ms fill" style="font-size:16px;color:{{ gateColor }};">{{ gateIcon }}</span><span style="font-size:12px;font-weight:800;color:{{ gateColor }};">Gate {{ gateState }}</span></div>
+              </div>
+              <!-- connectivity -->
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--primary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--primary-c-ink);">cell_tower</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">Connectivity</span></div>
+                <div style="display:flex;align-items:flex-end;gap:5px;height:46px;">
+                  <div style="flex:1;height:30%;border-radius:5px;background:{{ sig1 }};"></div>
+                  <div style="flex:1;height:52%;border-radius:5px;background:{{ sig2 }};"></div>
+                  <div style="flex:1;height:74%;border-radius:5px;background:{{ sig3 }};"></div>
+                  <div style="flex:1;height:100%;border-radius:5px;background:{{ sig4 }};"></div>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-top:12px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:var(--ink);">{{ rssi }}</span><span style="font-weight:700;font-size:13px;color:var(--ink-3);">dBm · {{ signalWord }}</span></div>
+                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:3px;">SNR {{ snr }} dB · SF{{ sf }} · {{ packets }} pkts</div>
+              </div>
+              <!-- model -->
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--secondary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--secondary-c-ink);">memory</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">CNN model</span></div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <dc-import name="Ring" value="{{ accFrac }}" big="{{ accInt }}" unit="%" sub="Acc" color="var(--secondary)" size="96" hint-size="96px,96px"></dc-import>
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px;"><span>Latency</span><span style="color:var(--ink);font-family:'Space Grotesk',sans-serif;">{{ latency }} ms</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:5px;"><span>Precision</span><span style="color:var(--ink);font-family:'Space Grotesk',sans-serif;">{{ precisionPct }}</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink-2);"><span>F1-score</span><span style="color:var(--ink);font-family:'Space Grotesk',sans-serif;">{{ f1Pct }}</span></div>
+                  </div>
+                </div>
+              </div>
+              <!-- power in/out -->
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--tertiary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--tertiary-c-ink);">solar_power</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">Power flow</span></div>
+                <div style="display:flex;align-items:baseline;gap:6px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ok);line-height:1;">+{{ solarIn }}</span><span style="font-weight:700;font-size:13px;color:var(--ink-3);">W solar in</span></div>
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none" width="100%" height="38" style="display:block;margin-top:8px;overflow:visible;"><path d="{{ solarSpark.area }}" fill="var(--ok)" opacity=".14"></path><polyline points="{{ solarSpark.line }}" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:6px;">Draw {{ draw }} W · net {{ netFlow }} W</div>
+              </div>
+            </div>
+
+            <!-- SUSTAINABILITY -->
+            <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:24px 26px;margin-top:16px;background:var(--primary);box-shadow:var(--shadow);">
+              <div style="position:absolute;right:-30px;top:-30px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.12);"></div>
+              <div style="position:relative;display:flex;align-items:center;gap:26px;flex-wrap:wrap;">
+                <div style="flex:0 0 auto;display:flex;align-items:center;gap:14px;"><span class="ms fill" style="font-size:44px;color:var(--primary-ink);">compost</span><div><div style="font-size:13px;font-weight:800;color:var(--primary-ink);opacity:.82;letter-spacing:.06em;text-transform:uppercase;">Sustainability impact</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--primary-ink);opacity:.9;">SDG 2 · SDG 12 · this season</div></div></div>
+                <div style="flex:1;"></div>
+                <div style="display:flex;gap:30px;flex-wrap:wrap;">
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ pesticideCut }}%</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">Pesticide cut</div></div>
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ co2Saved }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">kg CO₂ saved</div></div>
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ litersAvoided }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">L spray avoided</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTTOM ROW -->
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;">
+              <div style="flex:1 1 360px;min-width:280px;border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-weight:700;font-size:16px;color:var(--ink);">Recent activity</span><button onClick="{{ onGoLogs }}" style="cursor:pointer;border:none;background:transparent;color:var(--secondary);font-weight:700;font-size:13px;display:flex;align-items:center;gap:3px;">View all<span class="ms" style="font-size:16px;">chevron_right</span></button></div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <sc-for list="{{ recentLogs }}" as="log" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:12px;">
+                      <span style="width:36px;height:36px;flex:0 0 auto;border-radius:11px;background:{{ log.tintBg }};display:grid;place-items:center;"><span class="ms fill" style="font-size:19px;color:{{ log.tint }};">{{ log.icon }}</span></span>
+                      <div style="min-width:0;flex:1;"><div style="font-weight:700;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ log.title }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ log.detail }}</div></div>
+                      <span style="font-size:11px;font-weight:700;color:var(--ink-3);flex:0 0 auto;">{{ log.ago }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="flex:1 1 280px;min-width:250px;border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-weight:700;font-size:16px;color:var(--ink);">Fleet</span><button onClick="{{ onGoFleet }}" style="cursor:pointer;border:none;background:transparent;color:var(--secondary);font-weight:700;font-size:13px;display:flex;align-items:center;gap:3px;">Map<span class="ms" style="font-size:16px;">chevron_right</span></button></div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ nodesOnline }}<span style="font-size:16px;color:var(--ink-3);">/{{ nodesTotal }}</span></span><span style="font-size:13px;font-weight:700;color:var(--ink-2);">nodes online</span></div>
+                <div style="display:flex;flex-direction:column;gap:7px;">
+                  <sc-for list="{{ fleetMini }}" as="nd" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="width:8px;height:8px;border-radius:50%;background:{{ nd.color }};flex:0 0 auto;"></span>
+                      <span style="font-weight:700;font-size:13px;color:var(--ink);flex:0 0 auto;">{{ nd.id }}</span>
+                      <span style="font-size:12px;font-weight:600;color:var(--ink-3);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ nd.name }}</span>
+                      <span style="font-size:12px;font-weight:800;color:{{ nd.color }};flex:0 0 auto;">{{ nd.statusWord }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= DETECTIONS ================= -->
+          <sc-if value="{{ showDetections }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Detections</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">On-device CNN inference · {{ latency }} ms · frame #{{ detFrame }}</div></div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <!-- CAMERA -->
+              <div style="flex:2 1 440px;min-width:300px;position:relative;overflow:hidden;border-radius:var(--radius-lg);background:#0a130b;box-shadow:var(--shadow);min-height:380px;display:flex;flex-direction:column;">
+                <div style="position:absolute;inset:0;background:linear-gradient(155deg,#1f4322,#123016 52%,#08150a);"></div>
+                <div style="position:absolute;inset:0;background:radial-gradient(50% 45% at 28% 26%,rgba(130,210,120,.30),transparent 66%),radial-gradient(45% 55% at 78% 72%,rgba(70,150,90,.24),transparent 68%),radial-gradient(40% 40% at 60% 40%,rgba(180,220,120,.16),transparent 70%);"></div>
+                <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;"></div>
+                <div style="position:absolute;left:0;right:0;height:70px;background:linear-gradient(180deg,rgba(120,240,150,.45),transparent);filter:blur(3px);animation:scan 3.6s linear infinite;"></div>
+                <!-- boxes -->
+                <div style="position:absolute;left:14%;top:22%;width:26%;height:32%;border:2px solid var(--secondary);border-radius:12px;box-shadow:0 0 18px rgba(87,224,255,.3),inset 0 0 0 1px rgba(0,0,0,.2);"><span style="position:absolute;top:-24px;left:-2px;background:var(--secondary);color:#04212a;font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap;">Thrips · {{ camConf1 }}</span><span style="position:absolute;left:-1px;top:-1px;width:12px;height:12px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:3px 0 0 0;"></span></div>
+                <div style="position:absolute;right:16%;bottom:20%;width:22%;height:26%;border:2px solid var(--tertiary);border-radius:12px;box-shadow:0 0 18px rgba(255,212,107,.28);"><span style="position:absolute;top:-24px;left:-2px;background:var(--tertiary);color:#3a2600;font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap;">Aphid · {{ camConf2 }}</span></div>
+                <div style="position:absolute;left:44%;top:52%;width:15%;height:18%;border:2px dashed rgba(255,255,255,.5);border-radius:10px;"><span style="position:absolute;top:-22px;left:-2px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;">ROI scan</span></div>
+                <!-- HUD -->
+                <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:14px;">
+                  <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span style="width:8px;height:8px;border-radius:50%;background:#ff5a5a;animation:pulse 1.4s infinite;"></span><span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.09em;">CAM 01 · LIVE</span></div>
+                  <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span class="ms" style="font-size:16px;color:#9be6a8;">memory</span><span style="font-size:11px;font-weight:700;color:#fff;">MobileNetV2</span></div>
+                </div>
+                <div style="flex:1;"></div>
+                <div style="position:relative;margin:14px;padding:14px 16px;border-radius:18px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+                  <div><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;">Targets in frame</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#fff;">{{ pestNowInt }}</div></div>
+                  <div style="width:1px;height:34px;background:rgba(255,255,255,.2);"></div>
+                  <div><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;">30-min window</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#fff;">{{ pestWindow }} <span style="font-size:13px;color:rgba(255,255,255,.6);">/ {{ eilInt }} EIL</span></div></div>
+                  <div style="flex:1;"></div>
+                  <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:{{ statusColor }};"><span class="ms fill" style="font-size:18px;color:#fff;">{{ statusIcon }}</span><span style="font-size:13px;font-weight:800;color:#fff;">{{ statusWord }}</span></div>
+                </div>
+              </div>
+              <!-- RIGHT RAIL -->
+              <div style="flex:1 1 280px;min-width:250px;display:flex;flex-direction:column;gap:16px;">
+                <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                  <div style="font-weight:700;font-size:15px;color:var(--ink);margin-bottom:14px;">Class breakdown</div>
+                  <div style="display:flex;flex-direction:column;gap:14px;">
+                    <sc-for list="{{ classesVM }}" as="c" hint-placeholder-count="3">
+                      <div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:{{ c.color }};"></span><span style="font-weight:700;font-size:13.5px;color:var(--ink);">{{ c.name }}</span></div><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);">{{ c.n }}</span></div>
+                        <div style="height:7px;border-radius:999px;background:var(--ring-track);overflow:hidden;"><div style="height:100%;width:{{ c.barPct }};border-radius:999px;background:{{ c.color }};transition:width .6s;"></div></div>
+                        <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-top:4px;">confidence {{ c.confPct }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-weight:700;font-size:15px;color:var(--ink);">Reference captures</span><span style="font-size:11px;font-weight:700;color:var(--ink-3);">drop your photos</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                    <label style="cursor:pointer;aspect-ratio:1;border-radius:14px;border:2px dashed var(--outline);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--surface-2);"><input type="file" accept="image/*" onChange="{{ onPhoto }}" style="display:none;"><span class="ms" style="font-size:24px;color:var(--ink-3);">add_photo_alternate</span><span style="font-size:9px;font-weight:700;color:var(--ink-3);">Add</span></label>
+                    <sc-if value="{{ hasPhotos }}" hint-placeholder-val="{{ false }}">{{ photoGrid }}</sc-if>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- MODEL PERFORMANCE -->
+            <div style="border-radius:var(--radius);padding:20px;margin-top:16px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--secondary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--secondary-c-ink);">insights</span></span><span style="font-weight:700;font-size:16px;color:var(--ink);">Model performance</span><span style="font-size:12px;font-weight:700;color:var(--ink-3);margin-left:auto;">MobileNetV2 · transfer learning · 20% negative class</span></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;">
+                <div style="padding:16px;border-radius:18px;background:var(--surface-2);"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Accuracy</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:var(--ink);">{{ accInt }}%</div><div style="height:6px;border-radius:999px;background:var(--ring-track);margin-top:8px;overflow:hidden;"><div style="height:100%;width:{{ accInt }}%;background:var(--secondary);border-radius:999px;transition:width .6s;"></div></div></div>
+                <div style="padding:16px;border-radius:18px;background:var(--surface-2);"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Precision</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:var(--ink);">{{ precisionPct }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:6px;">true positives / all flagged</div></div>
+                <div style="padding:16px;border-radius:18px;background:var(--surface-2);"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Recall</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:var(--ink);">{{ recallPct }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:6px;">caught / all real pests</div></div>
+                <div style="padding:16px;border-radius:18px;background:var(--surface-2);"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">F1-score</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:var(--ink);">{{ f1Pct }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:6px;">balance of both</div></div>
+                <div style="padding:16px;border-radius:18px;background:var(--surface-2);grid-column:span 2;"><div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Inference latency</div><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--ink);">{{ latency }} ms</span></div><svg viewBox="0 0 100 26" preserveAspectRatio="none" width="100%" height="34" style="display:block;margin-top:8px;overflow:visible;"><path d="{{ latSpark.area }}" fill="var(--secondary)" opacity=".14"></path><polyline points="{{ latSpark.line }}" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg></div>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= ENVIRONMENT ================= -->
+          <sc-if value="{{ showEnvironment }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Environment</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">Soil & microclimate · capacitive moisture / EC probe + thermal</div></div>
+            <!-- SOIL GATE -->
+            <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:22px 24px;margin-bottom:16px;background:{{ gateColorSoft }};border:1px solid {{ gateColor }};display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+              <span class="ms fill" style="font-size:48px;color:{{ gateColor }};">{{ gateIcon }}</span>
+              <div style="flex:1 1 240px;"><div style="font-size:12px;font-weight:800;color:{{ gateColor }};letter-spacing:.06em;text-transform:uppercase;">Soil-gated spray control</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink);margin-top:2px;">Gate is {{ gateState }} — soil {{ gateWord }}</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:4px;">Moisture {{ moistInt }}% vs {{ gatePct }}% saturation limit. {{ gateExplain }}</div></div>
+              <dc-import name="Ring" value="{{ moistFrac }}" big="{{ moistInt }}" unit="%" sub="Soil H₂O" color="{{ gateColor }}" size="120" hint-size="120px,120px"></dc-import>
+            </div>
+            <!-- WEATHER -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <sc-for list="{{ weather }}" as="w" hint-placeholder-count="5">
+                <div style="flex:1 1 100px;border-radius:20px;padding:14px 10px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <span style="font-size:12px;font-weight:800;color:var(--ink-3);">{{ w.day }}</span>
+                  <span class="ms fill" style="font-size:30px;color:{{ w.color }};">{{ w.icon }}</span>
+                  <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ w.t }}°</span>
+                  <span style="font-size:11px;font-weight:700;color:var(--secondary);">{{ w.r }}% rain</span>
+                </div>
+              </sc-for>
+              <div style="flex:2 1 220px;border-radius:20px;padding:14px 18px;background:var(--secondary-c);border:1px solid var(--glass-brd);display:flex;align-items:center;gap:12px;">
+                <span class="ms fill" style="font-size:30px;color:var(--secondary-c-ink);">rainy</span>
+                <div><div style="font-weight:800;font-size:13.5px;color:var(--secondary-c-ink);">Rain likely Sat & Tue</div><div style="font-size:12px;font-weight:600;color:var(--secondary-c-ink);opacity:.8;">Soil gate will hold sprays — detection window auto-extends after rain.</div></div>
+              </div>
+            </div>
+            <!-- GAUGES -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;"><div style="display:flex;align-items:center;gap:9px;align-self:flex-start;margin-bottom:6px;"><span class="ms fill" style="font-size:22px;color:var(--tertiary);">device_thermostat</span><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);">Air temp</span></div><dc-import name="Ring" value="{{ airTempFrac }}" big="{{ airTempV }}" unit="°C" sub="Ambient" color="var(--tertiary)" size="120" hint-size="120px,120px"></dc-import></div>
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;"><div style="display:flex;align-items:center;gap:9px;align-self:flex-start;margin-bottom:6px;"><span class="ms fill" style="font-size:22px;color:var(--secondary);">thermostat_auto</span><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);">Soil temp</span></div><dc-import name="Ring" value="{{ soilTempFrac }}" big="{{ soilTempV }}" unit="°C" sub="Root zone" color="var(--secondary)" size="120" hint-size="120px,120px"></dc-import></div>
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;"><div style="display:flex;align-items:center;gap:9px;align-self:flex-start;margin-bottom:6px;"><span class="ms fill" style="font-size:22px;color:var(--primary);">water_drop</span><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);">Humidity</span></div><dc-import name="Ring" value="{{ humidityFrac }}" big="{{ humidityV }}" unit="%" sub="Rel. air" color="var(--primary)" size="120" hint-size="120px,120px"></dc-import></div>
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;"><span class="ms fill" style="font-size:22px;color:var(--secondary);">science</span><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);">Soil pH</span></div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:36px;color:var(--ink);">{{ phV }}</div><div style="position:relative;height:10px;border-radius:999px;margin-top:12px;background:linear-gradient(90deg,#e0533b,#e8b93b,#3fa14b,#3f7fd9);"><span style="position:absolute;top:-4px;left:{{ phMarker }};width:6px;height:18px;border-radius:3px;background:var(--ink);border:2px solid var(--surface);transform:translateX(-50%);"></span></div><div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:8px;">Slightly acidic — ideal for Cavendish</div></div>
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;"><span class="ms fill" style="font-size:22px;color:var(--tertiary);">bolt</span><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);">Soil EC</span></div><div style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:36px;color:var(--ink);">{{ ecV }}</span><span style="font-weight:700;font-size:14px;color:var(--ink-3);">mS/cm</span></div><div style="height:8px;border-radius:999px;background:var(--ring-track);margin-top:14px;overflow:hidden;"><div style="height:100%;width:{{ ecPct }};background:var(--tertiary);border-radius:999px;transition:width .6s;"></div></div><div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:8px;">Nutrient salinity · healthy range</div></div>
+              <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;"><span class="ms fill" style="font-size:22px;color:var(--bad);">thermostat</span><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);">Thermal profile</span></div><div style="position:relative;height:28px;border-radius:10px;background:linear-gradient(90deg,#2b5cc7,#3fa14b,#e8b93b,#e0533b);"><span style="position:absolute;top:-6px;left:{{ thermPos }};transform:translateX(-50%);width:4px;height:40px;background:var(--ink);border:2px solid var(--surface);border-radius:3px;"></span></div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--ink-3);margin-top:6px;"><span>18°</span><span>Canopy {{ airTempV }}°C</span><span>40°</span></div></div>
+            </div>
+            <!-- MOISTURE TREND -->
+            <div style="border-radius:var(--radius);padding:20px;margin-top:16px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><span style="font-weight:700;font-size:16px;color:var(--ink);">Soil moisture trend</span><span style="font-size:12px;font-weight:700;color:var(--ink-3);">last 24 readings · gate at {{ gatePct }}%</span></div>
+              <svg viewBox="0 0 100 32" preserveAspectRatio="none" width="100%" height="120" style="display:block;overflow:visible;"><path d="{{ moistSpark.area }}" fill="var(--primary)" opacity=".14"></path><polyline points="{{ moistSpark.line }}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= POWER ================= -->
+          <sc-if value="{{ showPower }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Power & autonomy</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">10 W solar · {{ capWh }} Wh Li-ion · self-sustaining node</div></div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <!-- BATTERY HERO -->
+              <div style="flex:1 1 320px;min-width:280px;border-radius:var(--radius-lg);padding:24px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--ok-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--ok);">battery_charging_full</span></span><span style="font-weight:700;font-size:16px;color:var(--ink);">Battery</span><span style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:var(--ok-c);"><span class="ms fill" style="font-size:15px;color:var(--ok);">solar_power</span><span style="font-size:12px;font-weight:800;color:var(--ok);">Charging</span></span></div>
+                <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="position:relative;width:120px;height:60px;border-radius:12px;border:3px solid var(--ink);padding:5px;"><div style="height:100%;width:{{ battPct }};border-radius:5px;background:var(--ok);transition:width .8s cubic-bezier(.2,.9,.2,1);"></div></div>
+                    <div style="width:7px;height:22px;border-radius:0 4px 4px 0;background:var(--ink);"></div>
+                  </div>
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:46px;color:var(--ink);line-height:1;">{{ battInt }}%</div><div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-top:4px;">{{ capMah }} mAh · {{ capWh }} Wh</div></div>
+                </div>
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none" width="100%" height="70" style="display:block;margin-top:18px;overflow:visible;"><path d="{{ battSpark.area }}" fill="var(--ok)" opacity=".14"></path><polyline points="{{ battSpark.line }}" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+              </div>
+              <!-- AUTONOMY -->
+              <div style="flex:1 1 320px;min-width:280px;border-radius:var(--radius-lg);padding:24px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--primary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--primary-c-ink);">schedule</span></span><span style="font-weight:700;font-size:16px;color:var(--ink);">Autonomy projection</span></div>
+                <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:52px;color:var(--ink);line-height:1;">{{ autonomyDaysV }}</span><span style="font-weight:700;font-size:16px;color:var(--ink-2);">days worst-case</span></div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:8px;"><span class="ms fill" style="font-size:17px;color:{{ autoStatusColor }};">{{ autoStatusIcon }}</span><span style="font-size:13px;font-weight:800;color:{{ autoStatusColor }};">{{ autoStatusWord }} — target {{ autonomyTarget }} days</span></div>
+                <div style="position:relative;height:14px;border-radius:999px;background:var(--ring-track);margin-top:18px;overflow:hidden;"><div style="height:100%;width:{{ autoBarPct }};border-radius:999px;background:{{ autoStatusColor }};transition:width .8s;"></div></div>
+                <div style="position:relative;height:0;"><span style="position:absolute;left:50%;top:-16px;transform:translateX(-50%);font-size:10px;font-weight:800;color:var(--ink-3);">▲ 7-day goal</span></div>
+                <div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:22px;">Verified continuously under monsoon (no-sun) worst-case conditions.</div>
+              </div>
+            </div>
+            <!-- FLOW + LOADS -->
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;">
+              <div style="flex:1 1 300px;min-width:260px;border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:16px;">Live power flow</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <div style="text-align:center;flex:1;"><span class="ms fill" style="font-size:34px;color:var(--tertiary);">solar_power</span><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--ink);margin-top:4px;">+{{ solarIn }}<span style="font-size:12px;color:var(--ink-3);"> W</span></div><div style="font-size:11px;font-weight:700;color:var(--ink-3);">Solar in</div></div>
+                  <span class="ms" style="font-size:22px;color:var(--ink-3);">arrow_forward</span>
+                  <div style="text-align:center;flex:1;"><span class="ms fill" style="font-size:34px;color:var(--ok);">battery_charging_full</span><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--ink);margin-top:4px;">{{ battInt }}<span style="font-size:12px;color:var(--ink-3);"> %</span></div><div style="font-size:11px;font-weight:700;color:var(--ink-3);">Storage</div></div>
+                  <span class="ms" style="font-size:22px;color:var(--ink-3);">arrow_forward</span>
+                  <div style="text-align:center;flex:1;"><span class="ms fill" style="font-size:34px;color:var(--secondary);">developer_board</span><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--ink);margin-top:4px;">-{{ draw }}<span style="font-size:12px;color:var(--ink-3);"> W</span></div><div style="font-size:11px;font-weight:700;color:var(--ink-3);">Load</div></div>
+                </div>
+                <div style="text-align:center;margin-top:16px;padding:10px;border-radius:14px;background:var(--surface-2);"><span style="font-size:13px;font-weight:700;color:var(--ink-2);">Net </span><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:{{ netColor }};">{{ netFlow }} W</span></div>
+              </div>
+              <div style="flex:1 1 300px;min-width:260px;border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:16px;">Consumption breakdown</div>
+                <div style="display:flex;height:14px;border-radius:999px;overflow:hidden;margin-bottom:16px;">
+                  <sc-for list="{{ powerLoads }}" as="pl" hint-placeholder-count="5"><div style="height:100%;width:{{ pl.barPct }};background:{{ pl.color }};"></div></sc-for>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:9px;">
+                  <sc-for list="{{ powerLoads }}" as="pl" hint-placeholder-count="5">
+                    <div style="display:flex;align-items:center;gap:10px;"><span style="width:9px;height:9px;border-radius:3px;background:{{ pl.color }};flex:0 0 auto;"></span><span class="ms" style="font-size:18px;color:var(--ink-3);">{{ pl.icon }}</span><span style="font-weight:700;font-size:13px;color:var(--ink);flex:1;">{{ pl.name }}</span><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--ink-2);">{{ pl.wattsV }} W</span></div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= ACTIVITY / LOGS ================= -->
+          <sc-if value="{{ showLogs }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;"><div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Activity</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ filteredCount }} events · {{ nodeId }} · live telemetry log</div></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
+              <sc-for list="{{ logFilters }}" as="f" hint-placeholder-count="5"><button onClick="{{ f.onPick }}" style="{{ f.style }}">{{ f.label }}</button></sc-for>
+            </div>
+            <div style="border-radius:var(--radius);padding:8px 20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+              <sc-for list="{{ filteredLogs }}" as="log" hint-placeholder-count="8">
+                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--outline);">
+                  <div style="position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;"><span style="width:40px;height:40px;border-radius:12px;background:{{ log.tintBg }};display:grid;place-items:center;"><span class="ms fill" style="font-size:21px;color:{{ log.tint }};">{{ log.icon }}</span></span></div>
+                  <div style="flex:1;min-width:0;padding-top:2px;"><div style="font-weight:700;font-size:14.5px;color:var(--ink);">{{ log.title }}</div><div style="font-size:13px;font-weight:600;color:var(--ink-3);margin-top:2px;">{{ log.detail }}</div></div>
+                  <span style="font-size:12px;font-weight:700;color:var(--ink-3);flex:0 0 auto;white-space:nowrap;padding-top:4px;">{{ log.ago }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= FLEET ================= -->
+          <sc-if value="{{ showFleet }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="margin-bottom:16px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Fleet</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ nodesOnline }} of {{ nodesTotal }} nodes online · Davao Cavendish plantation</div></div>
+            <!-- stats -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px;">
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ nodesOnline }}/{{ nodesTotal }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Nodes online</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ fleetSprays }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Sprays today</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ fleetAvgBatt }}%</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Avg battery</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--primary);">SF{{ sf }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">LoRaWAN mesh</div></div>
+            </div>
+            <!-- MAP -->
+            <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg);height:400px;background:linear-gradient(160deg,#3c6b3a,#2e5730 55%,#274a2a);box-shadow:var(--shadow);border:1px solid var(--glass-brd);margin-bottom:16px;">
+              <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(78deg,rgba(0,0,0,.10) 0 3px,transparent 3px 26px);"></div>
+              <div style="position:absolute;inset:0;background-image:radial-gradient(40% 40% at 20% 25%,rgba(150,210,130,.25),transparent 70%),radial-gradient(45% 45% at 80% 75%,rgba(90,150,90,.25),transparent 70%);"></div>
+              <div style="position:absolute;left:0;bottom:0;width:38%;height:34%;background:linear-gradient(120deg,rgba(90,170,220,.5),rgba(90,170,220,.15));border-radius:0 60% 0 0;"></div>
+              <div style="position:absolute;top:14px;left:14px;display:flex;gap:6px;flex-wrap:wrap;"><span style="display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);"><span class="ms" style="font-size:15px;color:#cfeccf;">grass</span><span style="font-size:11px;font-weight:700;color:#fff;">Cavendish rows</span></span><span style="display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);"><span class="ms" style="font-size:15px;color:#9fd8f0;">water</span><span style="font-size:11px;font-weight:700;color:#fff;">Creek</span></span></div>
+              <sc-for list="{{ mapNodes }}" as="nd" hint-placeholder-count="5">
+                <button onClick="{{ nd.onPick }}" style="{{ nd.pinStyle }}"><span style="{{ nd.dotStyle }}"></span><span style="{{ nd.chipStyle }}">{{ nd.id }}</span></button>
+              </sc-for>
+            </div>
+            <!-- NODE CARDS -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;">
+              <sc-for list="{{ mapNodes }}" as="nd" hint-placeholder-count="5">
+                <button onClick="{{ nd.onPick }}" style="{{ nd.cardStyle }}">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><span style="width:10px;height:10px;border-radius:50%;background:{{ nd.color }};"></span><span style="font-weight:800;font-size:15px;color:var(--ink);">{{ nd.id }}</span><span style="font-size:13px;font-weight:600;color:var(--ink-3);">{{ nd.name }}</span><span style="margin-left:auto;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:{{ nd.tintBg }};"><span class="ms fill" style="font-size:14px;color:{{ nd.color }};">{{ nd.icon }}</span><span style="font-size:11px;font-weight:800;color:{{ nd.color }};">{{ nd.statusWord }}</span></span></div>
+                  <div style="display:flex;gap:14px;">
+                    <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Battery</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.batteryInt }}%</div></div>
+                    <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Pest</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.pestV }}</div></div>
+                    <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Soil</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.soilV }}%</div></div>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= ANALYTICS ================= -->
+          <sc-if value="{{ showAnalytics }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;" data-screen-label="Analytics">
+            <div style="margin-bottom:16px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Analytics</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">7-day detection & spray intelligence · {{ nodeId }}</div></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px;">
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ anDet }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Detections this week</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--secondary);">{{ anSprays }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Sprays triggered</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--primary);">{{ savTotal }} L</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Chemical avoided</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">99.2%</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Node uptime</div></div>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+              <div style="flex:1.4 1 360px;min-width:280px;border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px;"><span style="font-weight:700;font-size:16px;color:var(--ink);">Detections vs sprays</span><div style="display:flex;gap:14px;"><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-2);"><span style="width:10px;height:10px;border-radius:3px;background:var(--tertiary);"></span>Detections</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-2);"><span style="width:10px;height:10px;border-radius:3px;background:var(--secondary);"></span>Sprays</span></div></div>
+                <div style="display:flex;align-items:flex-end;gap:10px;height:160px;margin-top:12px;">
+                  <sc-for list="{{ weekVM }}" as="d" hint-placeholder-count="7">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end;">
+                      <div style="display:flex;align-items:flex-end;gap:3px;width:100%;height:100%;justify-content:center;">
+                        <div title="{{ d.det }} detections" style="width:36%;max-width:26px;height:{{ d.detH }};border-radius:7px 7px 3px 3px;background:var(--tertiary);transition:height .5s;"></div>
+                        <div title="{{ d.spray }} sprays" style="width:36%;max-width:26px;height:{{ d.sprayH }};border-radius:7px 7px 3px 3px;background:var(--secondary);"></div>
+                      </div>
+                      <span style="font-size:11px;font-weight:700;color:{{ d.labColor }};">{{ d.day }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="flex:1 1 280px;min-width:250px;border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+                <div style="font-weight:700;font-size:16px;color:var(--ink);">Cumulative chemical saved</div>
+                <div style="display:flex;align-items:baseline;gap:6px;margin-top:10px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;color:var(--primary);line-height:1;">{{ savTotal }}</span><span style="font-weight:700;font-size:15px;color:var(--ink-3);">L over 8 weeks</span></div>
+                <svg viewBox="0 0 100 32" preserveAspectRatio="none" width="100%" height="110" style="display:block;margin-top:12px;overflow:visible;"><path d="{{ savingsSpark.area }}" fill="var(--primary)" opacity=".14"></path><polyline points="{{ savingsSpark.line }}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+                <div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:8px;">vs calendar spraying baseline · SDG 12</div>
+              </div>
+            </div>
+            <div style="border-radius:var(--radius);padding:20px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><span style="font-weight:700;font-size:16px;color:var(--ink);">Pest activity by hour</span><span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:var(--tertiary-c);"><span class="ms fill" style="font-size:15px;color:var(--tertiary-c-ink);">schedule</span><span style="font-size:12px;font-weight:800;color:var(--tertiary-c-ink);">Peak {{ peakLabel }}</span></span></div>
+              <sc-for list="{{ heatRows }}" as="hr" hint-placeholder-count="7">
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                  <span style="width:32px;font-size:10.5px;font-weight:700;color:var(--ink-3);flex:0 0 auto;">{{ hr.day }}</span>
+                  <div style="flex:1;display:grid;grid-template-columns:repeat(24,1fr);gap:3px;">
+                    <sc-for list="{{ hr.cells }}" as="c" hint-placeholder-count="24">
+                      <div title="{{ c.tip }}" style="aspect-ratio:1;border-radius:4px;background:var(--tertiary);opacity:{{ c.op }};"></div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <span style="width:32px;flex:0 0 auto;"></span>
+                <div style="flex:1;display:grid;grid-template-columns:repeat(24,1fr);gap:3px;">
+                  <sc-for list="{{ hourLabels }}" as="h" hint-placeholder-count="24"><span style="font-size:9.5px;font-weight:700;color:var(--ink-3);text-align:center;">{{ h }}</span></sc-for>
+                </div>
+              </div>
+              <div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:10px;">Dawn & dusk peaks match thrips flight behaviour — capture interval auto-densifies in these windows.</div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ================= SETTINGS ================= -->
+          <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Settings</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">Configure detection, spraying, power & display</div></div>
+            <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
+              <!-- CATEGORY RAIL (desktop) -->
+              <sc-if value="{{ settingsTwoCol }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:0 0 258px;position:sticky;top:78px;border-radius:var(--radius);padding:10px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px;">
+                <sc-for list="{{ settingsCats }}" as="cat" hint-placeholder-count="8">
+                  <button onClick="{{ cat.onPick }}" style="{{ cat.rowStyle }}"><span style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;flex:0 0 auto;"><span class="ms" style="font-size:19px;color:{{ cat.iconColor }};">{{ cat.icon }}</span></span><div style="text-align:left;min-width:0;"><div style="font-weight:700;font-size:14px;color:{{ cat.labelColor }};">{{ cat.label }}</div><div style="font-size:11px;font-weight:600;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ cat.desc }}</div></div></button>
+                </sc-for>
+              </div>
+              </sc-if>
+              <!-- CATEGORY CHIPS (mobile) -->
+              <sc-if value="{{ settingsOneCol }}" hint-placeholder-val="{{ false }}">
+              <div style="width:100%;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;">
+                <sc-for list="{{ settingsCats }}" as="cat" hint-placeholder-count="8">
+                  <button onClick="{{ cat.onPick }}" style="{{ cat.chipStyle }}"><span class="ms" style="font-size:18px;color:{{ cat.iconColor }};">{{ cat.icon }}</span><span style="font-weight:700;font-size:13px;color:{{ cat.labelColor }};">{{ cat.label }}</span></button>
+                </sc-for>
+              </div>
+              </sc-if>
+              <!-- DETAIL -->
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;">
+                <sc-for list="{{ settingsSections }}" as="sec" hint-placeholder-count="2">
+                  <div style="border-radius:var(--radius);background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);overflow:hidden;">
+                    <div style="padding:16px 20px 8px;font-weight:800;font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;">{{ sec.title }}</div>
+                    <sc-for list="{{ sec.rows }}" as="row" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-top:1px solid var(--outline);">
+                        <span style="width:38px;height:38px;border-radius:11px;background:var(--surface-2);display:grid;place-items:center;flex:0 0 auto;"><span class="ms" style="font-size:20px;color:var(--ink-2);">{{ row.icon }}</span></span>
+                        <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:14.5px;color:var(--ink);">{{ row.label }}</div><sc-if value="{{ row.desc }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;font-weight:600;color:var(--ink-3);margin-top:2px;">{{ row.desc }}</div></sc-if></div>
+                        <div style="flex:0 0 auto;display:flex;align-items:center;">
+                          <sc-if value="{{ row.isToggle }}" hint-placeholder-val="{{ false }}"><button onClick="{{ row.onToggle }}" style="width:52px;height:30px;border-radius:999px;border:none;cursor:pointer;background:{{ row.trackColor }};position:relative;transition:background .25s;"><span style="position:absolute;top:3px;left:{{ row.knobLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25);transition:left .25s cubic-bezier(.2,.9,.2,1);"></span></button></sc-if>
+                          <sc-if value="{{ row.isRange }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:12px;width:190px;"><input type="range" min="{{ row.min }}" max="{{ row.max }}" step="{{ row.step }}" value="{{ row.value }}" onChange="{{ row.onInput }}" onInput="{{ row.onInput }}" style="flex:1;accent-color:var(--primary);height:4px;cursor:pointer;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);min-width:48px;text-align:right;">{{ row.display }}</span></div></sc-if>
+                          <sc-if value="{{ row.isSeg }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--surface-2);"><sc-for list="{{ row.options }}" as="opt" hint-placeholder-count="2"><button onClick="{{ opt.onPick }}" style="{{ opt.style }}">{{ opt.label }}</button></sc-for></div></sc-if>
+                          <sc-if value="{{ row.isTheme }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px;"><sc-for list="{{ directions }}" as="d" hint-placeholder-count="3"><button onClick="{{ d.onPick }}" style="{{ d.miniStyle }}"><span style="{{ d.miniSwatch }}"></span></button></sc-for></div></sc-if>
+                          <sc-if value="{{ row.isModeSeg }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--surface-2);"><sc-for list="{{ modeOptions }}" as="opt" hint-placeholder-count="2"><button onClick="{{ opt.onPick }}" style="{{ opt.style }}">{{ opt.label }}</button></sc-for></div></sc-if>
+                          <sc-if value="{{ row.isInfo }}" hint-placeholder-val="{{ false }}"><span style="font-weight:700;font-size:13.5px;color:var(--ink-2);text-align:right;">{{ row.value }}</span></sc-if>
+                          <sc-if value="{{ row.isButton }}" hint-placeholder-val="{{ false }}"><button onClick="{{ row.onClick }}" style="cursor:pointer;border:none;background:var(--primary);color:var(--primary-ink);border-radius:11px;padding:9px 18px;font-weight:700;font-size:13px;font-family:Manrope,sans-serif;">{{ row.btnLabel }}</button></sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+                <div style="text-align:center;padding:10px;font-size:12px;font-weight:600;color:var(--ink-3);">BananaGuard v2.3.0 · University of Mindanao · Blaya · Diaz · Mugat</div>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+        </div>
+      </div>
+
+      <!-- BOTTOM NAV (mobile) -->
+      <sc-if value="{{ bottomNav }}" hint-placeholder-val="{{ false }}">
+      <div style="position:sticky;bottom:0;z-index:6;display:flex;padding:8px 8px calc(8px + env(safe-area-inset-bottom));gap:2px;background:var(--nav);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-top:1px solid var(--glass-brd);">
+        <sc-for list="{{ bottomItems }}" as="item" hint-placeholder-count="5">
+          <button onClick="{{ item.onClick }}" style="flex:1;cursor:pointer;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;"><span style="{{ item.pillStyle }}"><span class="ms {{ item.fillClass }}" style="font-size:23px;color:{{ item.fg }};">{{ item.icon }}</span></span><span style="font-size:10.5px;font-weight:700;color:{{ item.fg }};">{{ item.label }}</span></button>
+        </sc-for>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ================= OVERLAYS ================= -->
+  <sc-if value="{{ overlayOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ onClose }}" style="position:fixed;inset:0;z-index:40;background:rgba(8,12,10,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:0;">
+    <div onClick="{{ stop }}" style="width:100%;max-width:{{ overlayMax }};margin:{{ overlayMargin }};background:var(--surface);border:1px solid var(--glass-brd);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:20px;max-height:82vh;overflow-y:auto;animation:popcard .32s cubic-bezier(.2,.9,.2,1) both;">
+      <!-- THEME -->
+      <sc-if value="{{ ovTheme }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-weight:700;font-size:18px;color:var(--ink);">Visual direction</span><button onClick="{{ onClose }}" style="cursor:pointer;border:none;background:var(--surface-2);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;"><span class="ms" style="font-size:20px;color:var(--ink-2);">close</span></button></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ directions }}" as="d" hint-placeholder-count="3">
+          <button onClick="{{ d.onPick }}" style="{{ d.rowStyle }}"><span style="width:52px;height:52px;border-radius:15px;flex:0 0 auto;background:{{ d.swatch }};box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);"></span><div style="flex:1;text-align:left;"><div style="font-weight:700;font-size:16px;color:var(--ink);">{{ d.label }}</div><div style="font-size:13px;font-weight:600;color:var(--ink-3);">{{ d.desc }}</div></div><sc-if value="{{ d.active }}" hint-placeholder-val="{{ false }}"><span class="ms fill" style="font-size:24px;color:var(--primary);">check_circle</span></sc-if></button>
+        </sc-for>
+      </div>
+      </sc-if>
+      <!-- NODES -->
+      <sc-if value="{{ ovNodes }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-weight:700;font-size:18px;color:var(--ink);">Select node</span><button onClick="{{ onClose }}" style="cursor:pointer;border:none;background:var(--surface-2);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;"><span class="ms" style="font-size:20px;color:var(--ink-2);">close</span></button></div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <sc-for list="{{ nodeList }}" as="nd" hint-placeholder-count="5">
+          <button onClick="{{ nd.onPick }}" style="{{ nd.rowStyle }}"><span style="width:10px;height:10px;border-radius:50%;background:{{ nd.color }};flex:0 0 auto;"></span><div style="flex:1;text-align:left;"><div style="font-weight:700;font-size:15px;color:var(--ink);">{{ nd.id }} · {{ nd.name }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);">{{ nd.block }} · battery {{ nd.batteryInt }}% · {{ nd.last }}</div></div><span style="font-size:12px;font-weight:800;color:{{ nd.color }};">{{ nd.statusWord }}</span></button>
+        </sc-for>
+      </div>
+      </sc-if>
+      <!-- ALERTS -->
+      <sc-if value="{{ ovAlerts }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-weight:700;font-size:18px;color:var(--ink);">Alerts & activity</span><button onClick="{{ onAck }}" style="cursor:pointer;border:none;background:var(--primary-c);color:var(--primary-c-ink);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;font-family:'Manrope',sans-serif;">Mark all read</button></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <sc-for list="{{ alertList }}" as="log" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:14px;background:var(--surface-2);">
+            <span style="width:38px;height:38px;flex:0 0 auto;border-radius:12px;background:{{ log.tintBg }};display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:{{ log.tint }};">{{ log.icon }}</span></span>
+            <div style="min-width:0;flex:1;"><div style="font-weight:700;font-size:14px;color:var(--ink);">{{ log.title }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);">{{ log.detail }}</div></div>
+            <span style="font-size:11px;font-weight:700;color:var(--ink-3);">{{ log.ago }}</span>
+          </div>
+        </sc-for>
+      </div>
+      </sc-if>
+      <!-- MORE (mobile) -->
+      <sc-if value="{{ ovMore }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;"><span style="font-weight:700;font-size:18px;color:var(--ink);">More</span><button onClick="{{ onClose }}" style="cursor:pointer;border:none;background:var(--surface-2);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;"><span class="ms" style="font-size:20px;color:var(--ink-2);">close</span></button></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <sc-for list="{{ moreItems }}" as="item" hint-placeholder-count="3">
+          <button onClick="{{ item.onClick }}" style="cursor:pointer;border:none;background:var(--surface-2);border-radius:18px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;"><span class="ms" style="font-size:26px;color:var(--ink);">{{ item.icon }}</span><span style="font-size:12px;font-weight:700;color:var(--ink);">{{ item.label }}</span></button>
+        </sc-for>
+      </div>
+      <div style="height:1px;background:var(--outline);margin:16px 0;"></div>
+      <button onClick="{{ onSimple }}" style="width:100%;cursor:pointer;border:none;background:var(--primary);color:var(--primary-ink);border-radius:16px;padding:15px;font-weight:700;font-size:15px;font-family:'Manrope',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="ms" style="font-size:20px;">visibility</span>Switch to Simple view</button>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- TOASTS -->
+  <sc-if value="{{ hasToasts }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;right:16px;bottom:16px;z-index:70;display:flex;flex-direction:column;gap:10px;width:min(340px,calc(100vw - 32px));">
+    <sc-for list="{{ toastsVM }}" as="t" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow-lg);backdrop-filter:blur(var(--blur));animation:riseIn .3s cubic-bezier(.2,.9,.2,1) both;">
+        <span style="width:38px;height:38px;border-radius:12px;background:{{ t.tintBg }};display:grid;place-items:center;flex:0 0 auto;"><span class="ms fill" style="font-size:20px;color:{{ t.tint }};">{{ t.icon }}</span></span>
+        <div style="min-width:0;flex:1;"><div style="font-weight:800;font-size:13.5px;color:var(--ink);">{{ t.title }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);">{{ t.detail }}</div></div>
+        <button onClick="{{ t.onClose }}" style="cursor:pointer;border:none;background:transparent;padding:2px;flex:0 0 auto;"><span class="ms" style="font-size:17px;color:var(--ink-3);">close</span></button>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860},&quot;direction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;verdant&quot;,&quot;options&quot;:[&quot;verdant&quot;,&quot;neural&quot;,&quot;harvest&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Direction&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;advanced&quot;,&quot;options&quot;:[&quot;simple&quot;,&quot;advanced&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Direction&quot;},&quot;liveData&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+class Component extends DCLogic {
+  state = {
+    direction: this.props.direction || 'verdant',
+    mode: this.props.mode || 'advanced',
+    route: 'overview',
+    settingsCat: 'general',
+    overlay: null,
+    vw: (typeof window !== 'undefined' ? window.innerWidth : 1200),
+    nodeId: 'N-01',
+    paused: this.props.liveData === false,
+    unread: 2,
+    now: Date.now(),
+    photos: [],
+    logFilter: 'all',
+    toasts: [],
+    settings: { units: 'C', language: 'English', confidence: 0.70, eil: 5, captureInterval: 30, negClass: true, roiDiff: true, gatePct: 55, sprayDur: 8, maxSprays: 12, aggWindow: 30, lowPower: false, dutyCycle: 30, solarPriority: true, saverPct: 20, sf: 10, uplink: 15, cloudSync: true, notifDetect: true, notifSpray: true, notifBlocked: true, notifPower: true, notifOffline: true, textScale: 'Default', reduceMotion: false },
+    L: {
+      pestNow: 2, pestWindow: 3.4, conf: 0.92,
+      classes: [
+        { key: 'thrips', name: 'Thrips hawaiiensis', short: 'Thrips', n: 3, conf: 0.93, color: 'var(--secondary)' },
+        { key: 'aphid', name: 'Banana aphid', short: 'Aphid', n: 1, conf: 0.81, color: 'var(--tertiary)' },
+        { key: 'weevil', name: 'Banana weevil', short: 'Weevil', n: 0, conf: 0.0, color: 'var(--primary)' }
+      ],
+      soilMoist: 38, soilEC: 1.4, soilPH: 6.4, soilTemp: 27.6, airTemp: 31.4, humidity: 73,
+      battery: 82, solarIn: 6.4, draw: 1.15,
+      rssi: -96, snr: 7.6, sf: 10, packets: 1284,
+      accuracy: 0.894, latency: 238, precision: 0.90, recall: 0.87, f1: 0.885,
+      sprayStatus: 'idle', spraysToday: 3, litersToday: 0.42,
+      pesticideCut: 61, litersAvoided: 118, co2Saved: 212
+    },
+    hist: {
+      pest: [2.1, 1.8, 2.4, 3.0, 2.6, 3.4, 4.1, 3.6, 3.0, 2.8, 3.4, 4.2, 4.8, 4.1, 3.6, 3.4],
+      batt: [88, 87, 86, 85, 84, 83, 82, 81, 80, 81, 82, 83, 82, 82, 82, 82],
+      moist: [42, 41, 40, 40, 39, 39, 38, 38, 37, 38, 38, 39, 38, 38, 38, 38],
+      solar: [0, 0, 1, 2.5, 4, 5.5, 7, 8, 8.5, 8, 7.5, 7, 6.8, 6.6, 6.4, 6.4],
+      lat: [240, 236, 242, 238, 245, 239, 236, 241, 238, 237, 240, 238, 236, 239, 238, 238]
+    },
+    nodes: [
+      { id: 'N-01', name: 'North Ridge', block: 'Block A', x: 27, y: 32, battery: 82, pest: 3.4, status: 'watch', soil: 38, temp: 31, online: true, last: '2 min ago' },
+      { id: 'N-02', name: 'Creekside', block: 'Block B', x: 58, y: 24, battery: 69, pest: 1.1, status: 'clear', soil: 61, temp: 30, online: true, last: '1 min ago' },
+      { id: 'N-03', name: 'Highland', block: 'Block C', x: 74, y: 50, battery: 91, pest: 5.6, status: 'blocked', soil: 72, temp: 29, online: true, last: 'just now' },
+      { id: 'N-04', name: 'River Flat', block: 'Block D', x: 41, y: 66, battery: 54, pest: 0.4, status: 'clear', soil: 44, temp: 32, online: true, last: '3 min ago' },
+      { id: 'N-05', name: 'South Gate', block: 'Block E', x: 67, y: 79, battery: 12, pest: 2.0, status: 'lowbatt', soil: 35, temp: 33, online: false, last: '26 min ago' }
+    ],
+    logs: [
+      { ago: 'just now', type: 'spray', title: 'Spray actuated — Zone 3', detail: 'Pest window 5.4 > EIL 5.0 · soil safe 38%', sev: 'act', icon: 'sprinkler' },
+      { ago: '2 min', type: 'detect', title: '3 Thrips hawaiiensis detected', detail: 'Confidence 0.93 · frame #10428', sev: 'info', icon: 'pest_control' },
+      { ago: '11 min', type: 'blocked', title: 'Spray held — wet soil', detail: 'Soil 63% > 55% saturation gate', sev: 'warn', icon: 'water_drop' },
+      { ago: '22 min', type: 'detect', title: 'Banana aphid cluster', detail: '2 targets · confidence 0.81', sev: 'info', icon: 'pest_control' },
+      { ago: '34 min', type: 'system', title: 'Model synced', detail: 'MobileNetV2 v2.3 · 89.4% val acc', sev: 'ok', icon: 'memory' },
+      { ago: '1 h', type: 'power', title: 'Solar charging resumed', detail: '+6.4 W · battery 78→82%', sev: 'ok', icon: 'solar_power' },
+      { ago: '2 h', type: 'lora', title: 'Uplink OK', detail: 'RSSI -96 dBm · SF10 · 1284 pkts', sev: 'info', icon: 'cell_tower' },
+      { ago: '3 h', type: 'detect', title: 'Negative class rejected', detail: 'Water droplet filtered · conf 0.12', sev: 'info', icon: 'block' }
+    ]
+  };
+
+  componentDidMount() {
+    this._onResize = () => this.setState({ vw: window.innerWidth });
+    window.addEventListener('resize', this._onResize);
+    this._timer = setInterval(() => this.tick(), 1500);
+    try { const p = JSON.parse(localStorage.getItem('bg_photos') || '[]'); if (p && p.length) this.setState({ photos: p }); } catch (e) {}
+  }
+  componentWillUnmount() { clearInterval(this._timer); window.removeEventListener('resize', this._onResize); }
+
+  tick() {
+    if (this.state.paused) { this.setState({ now: Date.now() }); return; }
+    let evt = null;
+    this.setState(s => {
+      const L = Object.assign({}, s.L);
+      const w = (v, d, lo, hi) => Math.max(lo, Math.min(hi, v + (Math.random() - 0.5) * d));
+      L.soilMoist = +w(L.soilMoist, 1.3, 20, 85).toFixed(1);
+      L.soilEC = +w(L.soilEC, 0.05, 0.6, 2.6).toFixed(2);
+      L.soilPH = +w(L.soilPH, 0.03, 5.4, 7.6).toFixed(2);
+      L.soilTemp = +w(L.soilTemp, 0.25, 22, 34).toFixed(1);
+      L.airTemp = +w(L.airTemp, 0.3, 24, 37).toFixed(1);
+      L.humidity = Math.round(w(L.humidity, 1.6, 45, 96));
+      L.latency = Math.round(w(L.latency, 7, 210, 275));
+      L.accuracy = +w(L.accuracy, 0.004, 0.85, 0.94).toFixed(3);
+      L.rssi = Math.round(w(L.rssi, 2, -112, -84));
+      L.snr = +w(L.snr, 0.5, 3, 11).toFixed(1);
+      if (Math.random() < 0.7) L.packets += 1;
+      L.pestNow = Math.max(0, Math.round(w(L.pestNow, 2.4, 0, 7)));
+      L.pestWindow = +Math.max(0, (L.pestWindow * 0.82 + L.pestNow * 0.18)).toFixed(1);
+      const cls = L.classes.map(c => Object.assign({}, c));
+      cls[0].n = Math.max(0, Math.round(w(cls[0].n, 1.6, 0, 6))); cls[0].conf = +w(cls[0].conf, 0.03, 0.82, 0.97).toFixed(2);
+      cls[1].n = Math.max(0, Math.round(w(cls[1].n, 1.2, 0, 4))); cls[1].conf = +w(cls[1].conf, 0.04, 0.7, 0.93).toFixed(2);
+      cls[2].n = Math.random() < 0.2 ? 1 : 0; cls[2].conf = cls[2].n ? +w(0.7, 0.05, 0.65, 0.86).toFixed(2) : 0;
+      L.classes = cls;
+      L.conf = Math.max(cls[0].conf, cls[1].conf, 0.5);
+      const hr = new Date().getHours() + new Date().getMinutes() / 60;
+      const daylight = Math.max(0, Math.sin(((hr - 6) / 12) * Math.PI));
+      L.solarIn = +(10 * daylight * (0.68 + Math.random() * 0.32)).toFixed(1);
+      L.draw = +w(L.draw, 0.15, 0.7, 1.7).toFixed(2);
+      const net = L.solarIn - L.draw;
+      L.battery = +Math.max(3, Math.min(100, L.battery + net * 0.016)).toFixed(1);
+      const soilSafe = L.soilMoist < s.settings.gatePct;
+      let logs = s.logs, spray = L.sprayStatus, unread = s.unread;
+      if (L.pestWindow >= 5 && soilSafe) {
+        if (spray !== 'spraying') { spray = 'spraying'; L.spraysToday += 1; L.litersToday = +(L.litersToday + 0.14).toFixed(2); logs = [{ ago: 'just now', type: 'spray', title: 'Spray actuated — Zone ' + (1 + Math.floor(Math.random() * 3)), detail: 'Pest ' + L.pestWindow.toFixed(1) + ' > EIL 5.0 · soil safe ' + Math.round(L.soilMoist) + '%', sev: 'act', icon: 'sprinkler' }].concat(logs).slice(0, 44); unread += 1; if (s.settings.notifSpray) evt = { icon: 'sprinkler', title: 'Spray actuated', detail: 'Pest ' + L.pestWindow.toFixed(1) + ' > EIL · soil safe ' + Math.round(L.soilMoist) + '%', sev: 'act' }; }
+      } else if (L.pestWindow >= 5 && !soilSafe) {
+        if (spray !== 'blocked') { spray = 'blocked'; logs = [{ ago: 'just now', type: 'blocked', title: 'Spray held — wet soil', detail: 'Soil ' + Math.round(L.soilMoist) + '% > 55% saturation gate', sev: 'warn', icon: 'water_drop' }].concat(logs).slice(0, 44); unread += 1; if (s.settings.notifBlocked) evt = { icon: 'water_drop', title: 'Spray held — wet soil', detail: 'Soil ' + Math.round(L.soilMoist) + '% above saturation gate', sev: 'warn' }; }
+      } else { spray = 'idle'; }
+      L.sprayStatus = spray;
+      const hist = {
+        pest: s.hist.pest.slice(1).concat(L.pestWindow),
+        batt: s.hist.batt.slice(1).concat(L.battery),
+        moist: s.hist.moist.slice(1).concat(L.soilMoist),
+        solar: s.hist.solar.slice(1).concat(L.solarIn),
+        lat: s.hist.lat.slice(1).concat(L.latency)
+      };
+      if (Math.random() < 0.12) {
+        const c = L.classes[Math.floor(Math.random() * 2)];
+        logs = [{ ago: 'just now', type: 'detect', title: (1 + Math.floor(Math.random() * 3)) + ' ' + c.name + ' detected', detail: 'Confidence ' + (0.78 + Math.random() * 0.18).toFixed(2) + ' · frame #' + (10400 + Math.floor(Math.random() * 300)), sev: 'info', icon: 'pest_control' }].concat(logs).slice(0, 44);
+      }
+      return { L, logs, hist, unread, now: Date.now() };
+    }, () => { if (evt) this.pushToast(evt); });
+  }
+
+  pushToast(t) {
+    const id = 't' + (this._tid = (this._tid || 0) + 1);
+    this.setState(s => ({ toasts: s.toasts.concat([Object.assign({ id }, t)]).slice(-3) }));
+    setTimeout(() => { this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })); }, 5200);
+  }
+  dismissToast(id) { this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })); }
+
+  analyticsData() {
+    if (this._an) return this._an;
+    const rnd = i => { const x = Math.sin(i * 127.1) * 43758.5453; return x - Math.floor(x); };
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const heatRows = days.map((day, d) => ({
+      day,
+      cells: Array.from({ length: 24 }, (_, h) => {
+        const base = Math.exp(-Math.pow((h - 7) / 3, 2)) * 0.85 + Math.exp(-Math.pow((h - 17.5) / 2.6, 2));
+        const v = Math.max(0.04, Math.min(1, base * (0.45 + rnd(d * 24 + h) * 0.75)));
+        return { v, op: (0.08 + v * 0.92).toFixed(2), tip: day + ' ' + h + ':00 — ' + Math.round(v * 9) + ' detections' };
+      })
+    }));
+    const week = days.map((day, d) => { const det = Math.round(20 + rnd(d + 31) * 38 + (d >= 4 ? 7 : 0)); return { day, det, spray: Math.max(1, Math.round(det / 11)) }; });
+    const maxDet = Math.max.apply(null, week.map(w => w.det));
+    const weekVM = week.map((w, i) => ({ day: w.day, det: w.det, spray: w.spray, detH: Math.round(w.det / maxDet * 100) + '%', sprayH: Math.round(w.spray / maxDet * 100) + '%', labColor: i === 6 ? 'var(--ink)' : 'var(--ink-3)' }));
+    let acc = 0; const sav = [0];
+    for (let i = 1; i < 8; i++) { acc += 11 + rnd(i + 7) * 8; sav.push(Math.round(acc)); }
+    const hourLabels = Array.from({ length: 24 }, (_, h) => (h % 6 === 0 ? String(h) : ''));
+    let peak = { v: 0, day: '', h: 0 };
+    heatRows.forEach(r => r.cells.forEach((c, h) => { if (c.v > peak.v) peak = { v: c.v, day: r.day, h }; }));
+    this._an = { heatRows, weekVM, sav, hourLabels, totalDet: week.reduce((a, b) => a + b.det, 0), totalSprays: week.reduce((a, b) => a + b.spray, 0), peakLabel: peak.day + ' ' + peak.h + ':00' };
+    return this._an;
+  }
+
+  go(route) { this.setState({ route, overlay: null }); }
+  setMode(m) { this.setState({ mode: m, overlay: null }); }
+  setDirection(k) { this.setState({ direction: k, overlay: null }); }
+  togglePause() { this.setState(s => ({ paused: !s.paused })); }
+  openOverlay(k) { this.setState({ overlay: k }); }
+  closeOverlay() { this.setState({ overlay: null }); }
+  ackAlerts() { this.setState({ unread: 0 }); }
+  setSettingsCat(c) { this.setState({ settingsCat: c }); }
+  setLogFilter(f) { this.setState({ logFilter: f }); }
+  selectNode(id) {
+    this.setState(s => {
+      const nd = s.nodes.find(n => n.id === id) || s.nodes[0];
+      const L = Object.assign({}, s.L, { soilMoist: nd.soil, battery: nd.battery, pestWindow: nd.pest, airTemp: nd.temp });
+      return { nodeId: id, L, overlay: null };
+    });
+  }
+  onPhoto(e) {
+    const f = e && e.target && e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      this.setState(s => {
+        const photos = [r.result].concat(s.photos).slice(0, 6);
+        try { localStorage.setItem('bg_photos', JSON.stringify(photos)); } catch (er) {}
+        return { photos };
+      });
+    };
+    r.readAsDataURL(f);
+  }
+
+  toggleSetting(k) { this.setState(s => ({ settings: Object.assign({}, s.settings, { [k]: !s.settings[k] }) })); }
+  setSetting(k, v) { this.setState(s => ({ settings: Object.assign({}, s.settings, { [k]: v }) })); }
+  testSpray() { this.setState(s => { const L = Object.assign({}, s.L, { sprayStatus: 'spraying', spraysToday: s.L.spraysToday + 1 }); const logs = [{ ago: 'just now', type: 'spray', title: 'Manual test spray', detail: 'Solenoid pulsed 1 s · operator command', sev: 'act', icon: 'sprinkler' }].concat(s.logs).slice(0, 44); return { L, logs, unread: s.unread + 1 }; }); this.pushToast({ icon: 'sprinkler', title: 'Manual test spray', detail: 'Solenoid pulsed 1 s', sev: 'act' }); }
+
+  themeVars() {
+    const T = {
+      verdant: {
+        '--bg1': '#EAF3EA', '--bg2': 'rgba(120,220,150,.28)', '--bg3': 'rgba(90,200,235,.20)',
+        '--orb1': 'rgba(96,214,132,.42)', '--orb2': 'rgba(78,196,232,.34)', '--orb3': 'rgba(255,196,90,.32)',
+        '--surface': '#FFFFFF', '--surface-2': '#F1F7F1', '--surface-3': '#E7F1E8',
+        '--glass': 'rgba(255,255,255,.72)', '--glass-brd': 'rgba(20,50,32,.09)',
+        '--ink': '#0F2318', '--ink-2': '#465A4E', '--ink-3': '#7C8E82',
+        '--outline': 'rgba(16,40,26,.10)', '--ring-track': 'rgba(16,40,26,.10)',
+        '--primary': '#1E9B4B', '--primary-ink': '#FFFFFF', '--primary-c': '#B8F3C6', '--primary-c-ink': '#053C1B',
+        '--secondary': '#0E8A99', '--secondary-c': '#B4EBF2', '--secondary-c-ink': '#043139',
+        '--tertiary': '#C97A00', '--tertiary-c': '#FFE1AE', '--tertiary-c-ink': '#412700',
+        '--ok': '#1E9B4B', '--ok-c': '#B8F3C6', '--warn': '#C97A00', '--warn-c': '#FFE1AE', '--bad': '#CF362B', '--bad-c': '#FFD9D4',
+        '--shadow': '0 10px 32px rgba(18,60,34,.10)', '--shadow-lg': '0 24px 58px rgba(18,60,34,.15)',
+        '--radius': '26px', '--radius-lg': '32px', '--blur': '16px',
+        '--nav': 'rgba(255,255,255,.72)', '--topbar': 'rgba(255,255,255,.64)', '--accent-glow': 'rgba(30,155,75,.35)'
+      },
+      neural: {
+        '--bg1': '#070E0B', '--bg2': 'rgba(30,200,120,.15)', '--bg3': 'rgba(60,180,255,.13)',
+        '--orb1': 'rgba(72,240,150,.28)', '--orb2': 'rgba(70,200,255,.22)', '--orb3': 'rgba(180,120,255,.20)',
+        '--surface': 'rgba(21,31,27,.66)', '--surface-2': 'rgba(255,255,255,.05)', '--surface-3': 'rgba(255,255,255,.08)',
+        '--glass': 'rgba(16,24,21,.6)', '--glass-brd': 'rgba(255,255,255,.10)',
+        '--ink': '#EAFBF1', '--ink-2': '#9DB4AB', '--ink-3': '#657A70',
+        '--outline': 'rgba(255,255,255,.10)', '--ring-track': 'rgba(255,255,255,.11)',
+        '--primary': '#5CF08D', '--primary-ink': '#05231A', '--primary-c': 'rgba(92,240,141,.18)', '--primary-c-ink': '#B7FFD0',
+        '--secondary': '#57E0FF', '--secondary-c': 'rgba(87,224,255,.16)', '--secondary-c-ink': '#C0F4FF',
+        '--tertiary': '#FFD46B', '--tertiary-c': 'rgba(255,212,107,.16)', '--tertiary-c-ink': '#FFECB8',
+        '--ok': '#5CF08D', '--ok-c': 'rgba(92,240,141,.18)', '--warn': '#FFC24D', '--warn-c': 'rgba(255,194,77,.16)', '--bad': '#FF6B6B', '--bad-c': 'rgba(255,107,107,.16)',
+        '--shadow': '0 14px 40px rgba(0,0,0,.5)', '--shadow-lg': '0 30px 68px rgba(0,0,0,.6)',
+        '--radius': '24px', '--radius-lg': '30px', '--blur': '22px',
+        '--nav': 'rgba(12,20,17,.62)', '--topbar': 'rgba(9,16,13,.52)', '--accent-glow': 'rgba(92,240,141,.5)'
+      },
+      harvest: {
+        '--bg1': '#FBF3E3', '--bg2': 'rgba(244,183,19,.22)', '--bg3': 'rgba(120,200,120,.20)',
+        '--orb1': 'rgba(244,183,19,.38)', '--orb2': 'rgba(210,120,60,.28)', '--orb3': 'rgba(120,190,90,.32)',
+        '--surface': '#FFFDF7', '--surface-2': '#F7EFDD', '--surface-3': '#F0E4CC',
+        '--glass': 'rgba(255,253,247,.74)', '--glass-brd': 'rgba(80,50,20,.11)',
+        '--ink': '#241A0C', '--ink-2': '#6A5A42', '--ink-3': '#9E8E72',
+        '--outline': 'rgba(80,50,20,.12)', '--ring-track': 'rgba(80,50,20,.13)',
+        '--primary': '#3F7A34', '--primary-ink': '#FFFFFF', '--primary-c': '#C6EDB6', '--primary-c-ink': '#123807',
+        '--secondary': '#BB5A2A', '--secondary-c': '#FFD9C2', '--secondary-c-ink': '#411705',
+        '--tertiary': '#D99400', '--tertiary-c': '#FFE6B0', '--tertiary-c-ink': '#3F2A00',
+        '--ok': '#3F7A34', '--ok-c': '#C6EDB6', '--warn': '#D99400', '--warn-c': '#FFE6B0', '--bad': '#C0402B', '--bad-c': '#FFD8CF',
+        '--shadow': '0 10px 32px rgba(120,80,20,.12)', '--shadow-lg': '0 24px 58px rgba(120,80,20,.17)',
+        '--radius': '28px', '--radius-lg': '34px', '--blur': '14px',
+        '--nav': 'rgba(255,253,247,.74)', '--topbar': 'rgba(255,253,247,.64)', '--accent-glow': 'rgba(63,122,52,.34)'
+      }
+    };
+    return T[this.state.direction] || T.verdant;
+  }
+
+  spark(arr) {
+    const w = 100, h = 30, n = arr.length;
+    const mn = Math.min.apply(null, arr), mx = Math.max.apply(null, arr), rng = (mx - mn) || 1;
+    const pts = arr.map((v, i) => [(i / (n - 1)) * w, h - ((v - mn) / rng) * (h - 4) - 2]);
+    const line = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const area = 'M0,' + h + ' L' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L') + ' L' + w + ',' + h + ' Z';
+    return { line, area };
+  }
+
+  nodeDerived(nd) {
+    const map = {
+      spray: { word: 'SPRAY', color: 'var(--secondary)', icon: 'sprinkler' },
+      watch: { word: 'WATCH', color: 'var(--tertiary)', icon: 'visibility' },
+      blocked: { word: 'HELD', color: 'var(--warn)', icon: 'pause_circle' },
+      clear: { word: 'CLEAR', color: 'var(--ok)', icon: 'check_circle' },
+      lowbatt: { word: 'LOW BAT', color: 'var(--bad)', icon: 'battery_alert' },
+      offline: { word: 'OFFLINE', color: 'var(--ink-3)', icon: 'cloud_off' }
+    };
+    const st = nd.online ? nd.status : 'offline';
+    return map[st] || map.clear;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const L = s.L;
+    const vw = s.vw;
+    const isMobile = vw < 760, isTablet = vw >= 760 && vw < 1080, isDesktop = vw >= 1080;
+    const isSimple = s.mode === 'simple', isAdvanced = s.mode === 'advanced';
+    const eil = this.state.settings.eil || 5;
+    const ratio = L.pestWindow / eil;
+    const soilSafe = L.soilMoist < this.state.settings.gatePct;
+
+    let statusWord, statusPlain, statusColor, statusIcon;
+    if (L.sprayStatus === 'spraying') { statusWord = 'SPRAYING'; statusPlain = 'Targeted spray is active — pests crossed the action threshold and the soil is dry enough to treat.'; statusColor = 'var(--secondary)'; statusIcon = 'sprinkler'; }
+    else if (L.sprayStatus === 'blocked') { statusWord = 'HELD'; statusPlain = 'Pests are high, but the soil is too wet. Spraying is paused to protect the soil and prevent runoff.'; statusColor = 'var(--warn)'; statusIcon = 'pause_circle'; }
+    else if (ratio >= 0.6) { statusWord = 'WATCH'; statusPlain = 'Pest activity is rising and being monitored closely. No spray needed yet.'; statusColor = 'var(--tertiary)'; statusIcon = 'visibility'; }
+    else { statusWord = 'ALL CLEAR'; statusPlain = 'No action needed. Pest levels are low and your crop is protected.'; statusColor = 'var(--ok)'; statusIcon = 'verified'; }
+
+    const pestLevel = ratio >= 1 ? 'HIGH' : ratio >= 0.5 ? 'MEDIUM' : 'LOW';
+    const pestColor = ratio >= 1 ? 'var(--bad)' : ratio >= 0.5 ? 'var(--tertiary)' : 'var(--ok)';
+    const gateState = soilSafe ? 'OPEN' : 'CLOSED';
+    const gateWord = soilSafe ? 'GOOD' : 'WET';
+    const gateColor = soilSafe ? 'var(--ok)' : 'var(--warn)';
+    const gateColorSoft = soilSafe ? 'var(--ok-c)' : 'var(--warn-c)';
+    const gateIcon = soilSafe ? 'lock_open' : 'lock';
+
+    const sigLevel = L.rssi > -92 ? 4 : L.rssi > -100 ? 3 : L.rssi > -107 ? 2 : 1;
+    const sigOn = 'var(--primary)', sigOff = 'var(--ring-track)';
+    const signalWord = sigLevel >= 4 ? 'Strong' : sigLevel === 3 ? 'Good' : sigLevel === 2 ? 'Fair' : 'Weak';
+
+    const clockD = new Date(s.now);
+    const clock = clockD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const nd0 = s.nodes.find(n => n.id === s.nodeId) || s.nodes[0];
+
+    const sevMap = {
+      act: { tint: 'var(--secondary)', bg: 'var(--secondary-c)' },
+      info: { tint: 'var(--ink-2)', bg: 'var(--surface-2)' },
+      warn: { tint: 'var(--warn)', bg: 'var(--warn-c)' },
+      ok: { tint: 'var(--ok)', bg: 'var(--ok-c)' },
+      bad: { tint: 'var(--bad)', bg: 'var(--bad-c)' }
+    };
+    const decorateLog = (lg) => Object.assign({}, lg, { tint: (sevMap[lg.sev] || sevMap.info).tint, tintBg: (sevMap[lg.sev] || sevMap.info).bg });
+
+    const routes = [
+      { key: 'overview', label: 'Overview', icon: 'space_dashboard' },
+      { key: 'detections', label: 'Detections', icon: 'pest_control' },
+      { key: 'environment', label: 'Environment', icon: 'humidity_mid' },
+      { key: 'power', label: 'Power', icon: 'bolt' },
+      { key: 'analytics', label: 'Analytics', icon: 'monitoring' },
+      { key: 'logs', label: 'Activity', icon: 'receipt_long' },
+      { key: 'fleet', label: 'Fleet', icon: 'hub' }
+    ];
+    const navItemBase = 'cursor:pointer;border:none;display:flex;align-items:center;gap:13px;padding:12px 13px;border-radius:15px;font-family:Manrope,sans-serif;text-align:left;width:100%;transition:background .2s;';
+    const navItems = routes.map(rt => {
+      const active = rt.key === s.route;
+      return Object.assign({}, rt, {
+        active,
+        onClick: () => this.go(rt.key),
+        fg: active ? 'var(--primary-c-ink)' : 'var(--ink-2)',
+        fillClass: active ? 'fill' : '',
+        navStyle: navItemBase + (active ? 'background:var(--primary-c);' : 'background:transparent;'),
+        showBadge: rt.key === 'logs' && s.unread > 0,
+        badge: s.unread
+      });
+    });
+    const settingsActive = s.route === 'settings';
+
+    const bottomBase = 'display:grid;place-items:center;width:52px;height:32px;border-radius:999px;transition:background .25s;';
+    const bottomRoutes = [routes[0], routes[1], routes[2], routes[3]];
+    const bottomItems = bottomRoutes.map(rt => {
+      const active = rt.key === s.route;
+      return Object.assign({}, rt, { onClick: () => this.go(rt.key), active, fg: active ? 'var(--primary)' : 'var(--ink-3)', fillClass: active ? 'fill' : '', pillStyle: bottomBase + (active ? 'background:var(--primary-c);' : 'background:transparent;') });
+    });
+    bottomItems.push({ label: 'More', icon: 'more_horiz', onClick: () => this.openOverlay('more'), fg: 'var(--ink-3)', fillClass: '', pillStyle: bottomBase + 'background:transparent;' });
+
+    const directions = [
+      { key: 'verdant', label: 'Verdant', desc: 'Expressive daylight', swatch: 'linear-gradient(135deg,#1E9B4B,#0E8A99 60%,#C97A00)' },
+      { key: 'neural', label: 'Neural', desc: 'Midnight glass', swatch: 'linear-gradient(135deg,#5CF08D,#57E0FF 55%,#B478FF)' },
+      { key: 'harvest', label: 'Harvest', desc: 'Warm solar', swatch: 'linear-gradient(135deg,#3F7A34,#D99400 55%,#BB5A2A)' }
+    ].map(d => Object.assign({}, d, { active: d.key === s.direction, onPick: () => this.setDirection(d.key), rowStyle: 'cursor:pointer;border:1px solid ' + (d.key === s.direction ? 'var(--primary)' : 'var(--glass-brd)') + ';background:var(--surface-2);border-radius:18px;padding:12px;display:flex;align-items:center;gap:14px;width:100%;' }));
+
+    const nodeList = s.nodes.map(nd => { const d = this.nodeDerived(nd); return Object.assign({}, nd, { color: d.color, statusWord: d.word, batteryInt: Math.round(nd.battery), onPick: () => this.selectNode(nd.id), rowStyle: 'cursor:pointer;border:1px solid ' + (nd.id === s.nodeId ? 'var(--primary)' : 'var(--glass-brd)') + ';background:var(--surface-2);border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;width:100%;' }); });
+    const fleetMini = nodeList.slice(0, 5);
+    const nodesOnline = s.nodes.filter(n => n.online).length;
+
+    const moreItems = [
+      { label: 'Analytics', icon: 'monitoring', onClick: () => this.go('analytics') },
+      { label: 'Activity', icon: 'receipt_long', onClick: () => this.go('logs') },
+      { label: 'Fleet', icon: 'hub', onClick: () => this.go('fleet') },
+      { label: 'Settings', icon: 'settings', onClick: () => this.go('settings') }
+    ];
+
+    const logsDecorated = s.logs.map(decorateLog);
+    const alertList = logsDecorated.slice(0, 8);
+
+    const netFlow = +(L.solarIn - L.draw).toFixed(2);
+
+    const clamp01 = (x) => Math.max(0, Math.min(1, x));
+    const classesVM = L.classes.map(c => ({ name: c.name, short: c.short, n: c.n, color: c.color, confPct: Math.round(c.conf * 100) + '%', barPct: Math.round(c.conf * 100) + '%', has: c.n > 0 }));
+    const latSpark = this.spark(s.hist.lat), moistSpark = this.spark(s.hist.moist), battSpark = this.spark(s.hist.batt);
+    const humidityFrac = clamp01(L.humidity / 100), soilTempFrac = clamp01((L.soilTemp - 15) / 25), airTempFrac = clamp01((L.airTemp - 15) / 25);
+    const thermPos = (clamp01((L.airTemp - 18) / 22) * 100).toFixed(1) + '%';
+    const phMarker = (clamp01((L.soilPH - 4) / 5) * 100).toFixed(0) + '%';
+    const ecPct = (clamp01(L.soilEC / 3) * 100).toFixed(0) + '%';
+    const loads = [{ name: 'CNN inference', icon: 'memory', watts: 0.34, color: 'var(--secondary)' }, { name: 'Camera capture', icon: 'photo_camera', watts: 0.26, color: 'var(--tertiary)' }, { name: 'LoRa uplink', icon: 'cell_tower', watts: 0.19, color: 'var(--primary)' }, { name: 'Sensors & MCU', icon: 'sensors', watts: 0.22, color: 'var(--warn)' }, { name: 'Idle / sleep', icon: 'bedtime', watts: 0.07, color: 'var(--ink-3)' }];
+    const totW = loads.reduce((a, b) => a + b.watts, 0);
+    const powerLoads = loads.map(l => ({ name: l.name, icon: l.icon, color: l.color, wattsV: l.watts.toFixed(2), barPct: Math.round(l.watts / totW * 100) + '%' }));
+    const autonomyDays = (L.battery / 100) * 11.5; const autoOk = autonomyDays >= 7;
+    const filterMap = { all: () => true, detect: (l) => l.type === 'detect', spray: (l) => l.type === 'spray', alert: (l) => l.type === 'blocked' || l.sev === 'warn' || l.sev === 'bad', system: (l) => l.type === 'system' || l.type === 'power' || l.type === 'lora' };
+    const filteredLogs = logsDecorated.filter(filterMap[s.logFilter] || (() => true));
+    const logFilters = [['all', 'All'], ['detect', 'Detections'], ['spray', 'Sprays'], ['alert', 'Alerts'], ['system', 'System']].map(pair => ({ key: pair[0], label: pair[1], onPick: () => this.setLogFilter(pair[0]), style: 'cursor:pointer;border:1px solid ' + (s.logFilter === pair[0] ? 'transparent' : 'var(--glass-brd)') + ';background:' + (s.logFilter === pair[0] ? 'var(--primary)' : 'var(--surface)') + ';color:' + (s.logFilter === pair[0] ? 'var(--primary-ink)' : 'var(--ink-2)') + ';font-weight:700;font-size:13px;padding:8px 15px;border-radius:999px;font-family:Manrope,sans-serif;white-space:nowrap;' }));
+    const mapNodes = nodeList.map(nd => { const der = this.nodeDerived(nd); const sel = nd.id === s.nodeId; return Object.assign({}, nd, { icon: der.icon, selected: sel, pestV: nd.pest.toFixed(1), soilV: Math.round(nd.soil), tintBg: 'var(--surface-2)', pinStyle: 'position:absolute;left:' + nd.x + '%;top:' + nd.y + '%;transform:translate(-50%,-50%);cursor:pointer;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;z-index:' + (sel ? 3 : 2) + ';', dotStyle: 'width:' + (sel ? 26 : 20) + 'px;height:' + (sel ? 26 : 20) + 'px;border-radius:50%;background:' + nd.color + ';border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35)' + (sel ? ', 0 0 0 5px ' + nd.color + '55' : '') + ';', chipStyle: 'font-size:10px;font-weight:800;color:var(--ink);background:var(--surface);padding:2px 8px;border-radius:999px;box-shadow:var(--shadow);white-space:nowrap;', cardStyle: 'cursor:pointer;text-align:left;border:1px solid ' + (sel ? 'var(--primary)' : 'var(--glass-brd)') + ';border-radius:var(--radius);padding:18px;background:var(--surface);box-shadow:var(--shadow);width:100%;' }); });
+    const fleetAvgBatt = Math.round(s.nodes.reduce((a, b) => a + b.battery, 0) / s.nodes.length);
+    const S = s.settings;
+    const modeOptions = [{ label: 'Simple', active: isSimple, onPick: () => this.setMode('simple') }, { label: 'Advanced', active: isAdvanced, onPick: () => this.setMode('advanced') }].map(o => ({ label: o.label, onPick: o.onPick, style: 'flex:1;cursor:pointer;border:none;padding:8px 14px;border-radius:9px;font-weight:700;font-size:13px;font-family:Manrope,sans-serif;background:' + (o.active ? 'var(--primary)' : 'transparent') + ';color:' + (o.active ? 'var(--primary-ink)' : 'var(--ink-2)') + ';' }));
+    directions.forEach(d => { d.miniStyle = 'cursor:pointer;border:2px solid ' + (d.active ? 'var(--primary)' : 'transparent') + ';border-radius:14px;padding:3px;background:transparent;'; d.miniSwatch = 'display:block;width:44px;height:44px;border-radius:11px;background:' + d.swatch + ';'; });
+    const catsDef = [['general', 'General', 'tune', 'Node, units & language'], ['detection', 'Detection & AI', 'pest_control', 'Model, thresholds & filtering'], ['spray', 'Spray control', 'sprinkler', 'Soil gate & actuation'], ['power', 'Power', 'bolt', 'Energy & battery saving'], ['connectivity', 'Connectivity', 'cell_tower', 'LoRaWAN & cloud sync'], ['notifications', 'Notifications', 'notifications', 'Push alert preferences'], ['display', 'Display', 'palette', 'Theme, view & motion'], ['about', 'About', 'info', 'Device & research team']];
+    const settingsCats = catsDef.map(pair => { const active = s.settingsCat === pair[0]; return { key: pair[0], label: pair[1], icon: pair[2], desc: pair[3], onPick: () => this.setSettingsCat(pair[0]), rowStyle: 'cursor:pointer;border:none;width:100%;text-align:left;display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:14px;background:' + (active ? 'var(--primary-c)' : 'transparent') + ';', chipStyle: 'cursor:pointer;border:1px solid ' + (active ? 'transparent' : 'var(--glass-brd)') + ';background:' + (active ? 'var(--primary-c)' : 'var(--surface)') + ';border-radius:999px;padding:8px 14px;display:flex;align-items:center;gap:7px;white-space:nowrap;flex:0 0 auto;', iconColor: active ? 'var(--primary-c-ink)' : 'var(--ink-2)', labelColor: active ? 'var(--primary-c-ink)' : 'var(--ink)' }; });
+    const tog = (id, icon, label, desc) => ({ isToggle: true, id, icon, label, desc, value: S[id], onToggle: () => this.toggleSetting(id), trackColor: S[id] ? 'var(--primary)' : 'var(--ring-track)', knobLeft: S[id] ? '25px' : '3px' });
+    const rng = (id, icon, label, desc, min, max, step, unit, fmt) => ({ isRange: true, id, icon, label, desc, min, max, step, value: S[id], display: fmt ? fmt(S[id]) : (S[id] + (unit || '')), onInput: (e) => this.setSetting(id, step < 1 ? parseFloat(e.target.value) : parseInt(e.target.value, 10)) });
+    const seg = (id, icon, label, desc, opts) => ({ isSeg: true, id, icon, label, desc, options: opts.map(o => ({ label: o.label, onPick: () => this.setSetting(id, o.value), style: 'cursor:pointer;border:none;padding:7px 13px;border-radius:9px;font-weight:700;font-size:13px;font-family:Manrope,sans-serif;background:' + (S[id] === o.value ? 'var(--primary)' : 'transparent') + ';color:' + (S[id] === o.value ? 'var(--primary-ink)' : 'var(--ink-2)') + ';' })) });
+    const info = (icon, label, value, desc) => ({ isInfo: true, icon, label, value, desc: desc || '' });
+    const btn = (icon, label, desc, btnLabel, onClick) => ({ isButton: true, icon, label, desc, btnLabel, onClick });
+    const catContent = {
+      general: [{ title: 'Device', rows: [info('sensors', 'Active node', s.nodeId + ' \u00b7 ' + nd0.name), info('place', 'Location', nd0.block + ' \u00b7 Davao')] }, { title: 'Preferences', rows: [seg('units', 'straighten', 'Temperature unit', 'Used across all readings', [{ label: '\u00b0C', value: 'C' }, { label: '\u00b0F', value: 'F' }]), seg('language', 'translate', 'Language', '', [{ label: 'English', value: 'English' }, { label: 'Filipino', value: 'Filipino' }, { label: 'Bisaya', value: 'Bisaya' }])] }],
+      detection: [{ title: 'Model', rows: [info('memory', 'Architecture', 'MobileNetV2'), rng('confidence', 'tune', 'Confidence threshold', 'Minimum score to accept a detection', 0.5, 0.95, 0.01, '', (v) => Math.round(v * 100) + '%'), tog('negClass', 'block', 'Negative-class rejection', 'Filter droplets, shadows, dirt & non-target insects'), tog('roiDiff', 'crop_free', 'ROI frame-differencing', 'Only classify moving regions to save compute')] }, { title: 'Thresholds', rows: [rng('eil', 'warning', 'Economic Injury Level', 'Targets per frame before spraying is justified', 2, 10, 1, ''), rng('captureInterval', 'schedule', 'Capture interval', 'Time between inference cycles', 10, 120, 5, ' s')] }],
+      spray: [{ title: 'Soil gate', rows: [rng('gatePct', 'water_drop', 'Soil-saturation gate', 'Block spraying above this moisture level', 40, 80, 1, '%'), rng('aggWindow', 'timelapse', 'Aggregation window', 'Detections pooled over this window', 10, 60, 5, ' min')] }, { title: 'Actuation', rows: [rng('sprayDur', 'sprinkler', 'Spray duration', 'Solenoid open time per pulse', 2, 20, 1, ' s'), rng('maxSprays', 'repeat', 'Max sprays per day', 'Safety cap on chemical volume', 1, 24, 1, ''), btn('bolt', 'Test spray now', 'Manually pulse the solenoid for 1 second', 'Run', () => this.testSpray())] }],
+      power: [{ title: 'Energy management', rows: [tog('lowPower', 'battery_saver', 'Low-power mode', 'Reduce inference frequency to extend runtime'), tog('solarPriority', 'solar_power', 'Solar-priority charging', 'Prefer solar input over battery draw'), rng('dutyCycle', 'schedule', 'Duty cycle', 'Deep-sleep interval between cycles', 15, 60, 5, ' min'), rng('saverPct', 'battery_alert', 'Battery-saver threshold', 'Enter low-power below this level', 5, 40, 5, '%')] }],
+      connectivity: [{ title: 'LoRaWAN', rows: [seg('sf', 'cell_tower', 'Spreading factor', 'Higher = more range, lower data rate', [{ label: 'SF9', value: 9 }, { label: 'SF10', value: 10 }, { label: 'SF11', value: 11 }]), info('wifi', 'Frequency band', '915 MHz'), rng('uplink', 'sync', 'Uplink interval', 'How often metrics transmit', 5, 60, 5, ' min'), tog('cloudSync', 'cloud', 'Cloud sync', 'Upload metrics to the dashboard')] }],
+      notifications: [{ title: 'Push alerts', rows: [tog('notifDetect', 'pest_control', 'Pest detections', ''), tog('notifSpray', 'sprinkler', 'Spray events', ''), tog('notifBlocked', 'water_drop', 'Soil-gate holds', ''), tog('notifPower', 'bolt', 'Power & battery', ''), tog('notifOffline', 'cloud_off', 'Node offline', '')] }],
+      display: [{ title: 'Appearance', rows: [{ isTheme: true, icon: 'palette', label: 'Visual direction', desc: 'Color world for the whole app' }, { isModeSeg: true, icon: 'visibility', label: 'View mode', desc: 'Simple is optimized for field use' }, seg('textScale', 'format_size', 'Text size', '', [{ label: 'Default', value: 'Default' }, { label: 'Large', value: 'Large' }, { label: 'XL', value: 'XL' }]), tog('reduceMotion', 'animation', 'Reduce motion', 'Minimise background & transition animation')] }],
+      about: [{ title: 'Hardware', rows: [info('memory', 'Controller', 'ESP32-C6'), info('photo_camera', 'Camera', 'OV5640 \u00b7 5 MP'), info('bolt', 'Power', '10 W solar \u00b7 37 Wh'), info('shield', 'Enclosure', 'IP65 polycarbonate'), info('tag', 'Firmware', 'v2.3.0')] }, { title: 'Research', rows: [info('school', 'Institution', 'Univ. of Mindanao'), info('group', 'Team', 'Blaya \u00b7 Diaz \u00b7 Mugat'), info('menu_book', 'Study', 'Edge-AI pest control')] }]
+    };
+    const settingsSections = catContent[s.settingsCat] || [];
+
+    // Analytics
+    const an = this.analyticsData();
+    const savingsSpark = this.spark(an.sav);
+    // Weather
+    const weather = [
+      { day: 'Today', icon: 'sunny', color: 'var(--tertiary)', t: 32, r: 10 },
+      { day: 'Sat', icon: 'rainy', color: 'var(--secondary)', t: 29, r: 80 },
+      { day: 'Sun', icon: 'partly_cloudy_day', color: 'var(--tertiary)', t: 30, r: 40 },
+      { day: 'Mon', icon: 'sunny', color: 'var(--tertiary)', t: 33, r: 5 },
+      { day: 'Tue', icon: 'thunderstorm', color: 'var(--secondary)', t: 28, r: 85 }
+    ];
+    // Toasts
+    const toastsVM = s.toasts.map(t => Object.assign({}, t, { tint: (sevMap[t.sev] || sevMap.info).tint, tintBg: (sevMap[t.sev] || sevMap.info).bg, onClose: () => this.dismissToast(t.id) }));
+    // i18n (Simple view)
+    const statusKey = L.sprayStatus === 'spraying' ? 'spray' : L.sprayStatus === 'blocked' ? 'held' : (ratio >= 0.6 ? 'watch' : 'clear');
+    const TR = {
+      English: { live: 'LIVE NOW', battery: 'Battery', pest: 'Pest level', soil: 'Soil', cam: 'Live camera', camSub: 'See what the sensor sees', alerts: 'Recent alerts',
+        status: { clear: 'ALL CLEAR', watch: 'WATCH', spray: 'SPRAYING', held: 'HELD' },
+        level: { LOW: 'LOW', MEDIUM: 'MEDIUM', HIGH: 'HIGH' }, gate: { GOOD: 'GOOD', WET: 'WET' }, gateSt: { OPEN: 'OPEN', CLOSED: 'CLOSED' },
+        daysLeft: d => 'About ' + d + ' days left', pestDetail: (n, e) => n + ' seen this frame · limit ' + e, soilDetail: (m, g) => 'Moisture ' + m + '% · spray gate ' + g,
+        pesticide: p => 'Pesticide cut ' + p + '%', impact: (c, l) => c + ' kg CO₂ saved · ' + l + ' L spray avoided this season', updates: n => n + ' new updates',
+        plain: { clear: 'No action needed. Pest levels are low and your crop is protected.', watch: 'Pest activity is rising and being monitored closely. No spray needed yet.', spray: 'Targeted spray is active — pests crossed the action threshold and the soil is dry enough to treat.', held: 'Pests are high, but the soil is too wet. Spraying is paused to protect the soil and prevent runoff.' } },
+      Filipino: { live: 'LIVE NGAYON', battery: 'Baterya', pest: 'Lebel ng peste', soil: 'Lupa', cam: 'Live na kamera', camSub: 'Tingnan ang nakikita ng sensor', alerts: 'Mga bagong alerto',
+        status: { clear: 'WALANG PESTE', watch: 'BANTAYAN', spray: 'NAG-IISPREY', held: 'NAKAHINTO' },
+        level: { LOW: 'MABABA', MEDIUM: 'KATAMTAMAN', HIGH: 'MATAAS' }, gate: { GOOD: 'MAGANDA', WET: 'BASA' }, gateSt: { OPEN: 'BUKAS', CLOSED: 'SARADO' },
+        daysLeft: d => 'Mga ' + d + ' araw pa', pestDetail: (n, e) => 'Nakita ngayon: ' + n + ' · limitasyon ' + e, soilDetail: (m, g) => 'Halumigmig ' + m + '% · spray gate ' + g,
+        pesticide: p => 'Nabawasan ang pestisidyo ng ' + p + '%', impact: (c, l) => c + ' kg CO₂ ang natipid · ' + l + ' L spray ang naiwasan ngayong season', updates: n => n + ' bagong update',
+        plain: { clear: 'Walang kailangang gawin. Mababa ang peste at ligtas ang tanim.', watch: 'Tumataas ang bilang ng peste at patuloy na binabantayan. Hindi pa kailangang mag-spray.', spray: 'May aktibong spray — lumagpas ang peste sa limitasyon at sapat na tuyo ang lupa.', held: 'Mataas ang peste pero masyadong basa ang lupa. Nakahinto muna ang spray para protektahan ang lupa.' } },
+      Bisaya: { live: 'LIVE KARON', battery: 'Baterya', pest: 'Lebel sa peste', soil: 'Yuta', cam: 'Live nga kamera', camSub: 'Tan-awa ang makita sa sensor', alerts: 'Bag-ong mga alerto',
+        status: { clear: 'WALAY PESTE', watch: 'BANTAYI', spray: 'NAG-SPRAY', held: 'GIPAHUNONG' },
+        level: { LOW: 'UBOS', MEDIUM: 'KASARANGAN', HIGH: 'TAAS' }, gate: { GOOD: 'MAAYO', WET: 'BASA' }, gateSt: { OPEN: 'ABLI', CLOSED: 'SIRADO' },
+        daysLeft: d => 'Mga ' + d + ' ka adlaw pa', pestDetail: (n, e) => 'Nakita karon: ' + n + ' · limit ' + e, soilDetail: (m, g) => 'Kaumog ' + m + '% · spray gate ' + g,
+        pesticide: p => 'Nakunhod ang pestisidyo og ' + p + '%', impact: (c, l) => c + ' kg CO₂ natipigan · ' + l + ' L spray nalikayan karong season', updates: n => n + ' ka bag-ong update',
+        plain: { clear: 'Walay kinahanglan buhaton. Ubos ang peste ug luwas ang tanom.', watch: 'Nagkataas ang peste ug padayon nga gibantayan. Dili pa kinahanglan mag-spray.', spray: 'Aktibo ang spray — milapas ang peste sa limit ug igo nang uga ang yuta.', held: 'Taas ang peste apan basa ra kaayo ang yuta. Gipahunong usa ang spray aron panalipdan ang yuta.' } }
+    };
+    const t = TR[S.language] || TR.English;
+    const autonomyStr = ((L.battery / 100) * 11.5).toFixed(1);
+    const textZoom = S.textScale === 'XL' ? 1.22 : S.textScale === 'Large' ? 1.1 : 1;
+
+    return {
+      motionOK: !S.reduceMotion,
+      hasToasts: toastsVM.length > 0, toastsVM,
+      showAnalytics: s.route === 'analytics',
+      weekVM: an.weekVM, heatRows: an.heatRows, hourLabels: an.hourLabels, savingsSpark,
+      savTotal: an.sav[an.sav.length - 1], anDet: an.totalDet, anSprays: an.totalSprays, peakLabel: an.peakLabel,
+      weather,
+      tLive: t.live, tStatusWord: t.status[statusKey], tStatusPlain: t.plain[statusKey],
+      tBattery: t.battery, tDaysLeft: t.daysLeft(autonomyStr),
+      tPestLabel: t.pest, tPestLevel: t.level[pestLevel], tPestDetail: t.pestDetail(L.pestNow, eil.toFixed(0)),
+      tSoil: t.soil, tGateWord: t.gate[gateWord], tSoilDetail: t.soilDetail(Math.round(L.soilMoist), t.gateSt[gateState]),
+      tPesticide: t.pesticide(L.pesticideCut), tImpact: t.impact(L.co2Saved, L.litersAvoided),
+      tCam: t.cam, tCamSub: t.camSub, tAlerts: t.alerts, tAlertsSub: t.updates(s.unread),
+      rootStyle: Object.assign({}, this.themeVars(), {
+        minHeight: '100vh', width: '100%', fontFamily: "'Manrope',system-ui,sans-serif",
+        color: 'var(--ink)', background: 'var(--bg1)', position: 'relative', overflowX: 'hidden',
+        backgroundImage: 'radial-gradient(1200px 700px at 10% -8%, var(--bg2), transparent 55%), radial-gradient(1000px 820px at 108% 112%, var(--bg3), transparent 55%)',
+        transition: 'background .5s ease, color .3s ease', WebkitFontSmoothing: 'antialiased', zoom: textZoom
+      }),
+      isMobile, isTablet, isDesktop, notMobile: !isMobile,
+      isSimple, isAdvanced,
+      sideNav: !isMobile, bottomNav: isMobile, navLabels: isDesktop, navWidth: isDesktop ? 244 : 84,
+      pad: isMobile ? 16 : isTablet ? 22 : 30, padBottom: isMobile ? 90 : (isTablet ? 22 : 30),
+      showOverview: s.route === 'overview',
+      showDetections: s.route === 'detections',
+      showEnvironment: s.route === 'environment',
+      showPower: s.route === 'power',
+      showLogs: s.route === 'logs',
+      showFleet: s.route === 'fleet',
+      showSettings: s.route === 'settings',
+      navItems, settingsNavStyle: navItemBase + (settingsActive ? 'background:var(--primary-c);' : 'background:transparent;'), settingsFg: settingsActive ? 'var(--primary-c-ink)' : 'var(--ink-2)',
+      bottomItems,
+      nodeId: s.nodeId, nodeName: nd0.name, nodeBlock: nd0.block,
+      clock,
+      statusWord, statusPlain, statusColor, statusIcon,
+      statusColorSoft: statusColor.replace('var(--', 'var(--').replace(')', '-c)'),
+      statusTint: 'linear-gradient(135deg,' + statusColor.replace(')', '-c)').replace('var(--', 'var(--') + ',transparent 62%)',
+      pestLevel, pestColor,
+      pestWindow: L.pestWindow.toFixed(1), pestNowInt: L.pestNow, eilInt: eil.toFixed(0),
+      ratioPct: Math.min(100, ratio * 100).toFixed(0) + '%',
+      pestSeg1: ratio >= 0.001 ? pestColor : 'var(--ring-track)',
+      pestSeg2: ratio >= 0.5 ? pestColor : 'var(--ring-track)',
+      pestSeg3: ratio >= 1 ? pestColor : 'var(--ring-track)',
+      battInt: Math.round(L.battery), battPct: Math.round(L.battery) + '%', battFrac: L.battery / 100,
+      autonomy: ((L.battery / 100) * 11.5).toFixed(1),
+      moistInt: Math.round(L.soilMoist), moistPct: Math.round(L.soilMoist) + '%', moistFrac: L.soilMoist / 100,
+      gateState, gateWord, gateColor, gateColorSoft, gateIcon,
+      soilSafe,
+      rssi: L.rssi, snr: L.snr.toFixed(1), sf: L.sf, packets: L.packets, signalWord,
+      sig1: sigLevel >= 1 ? sigOn : sigOff, sig2: sigLevel >= 2 ? sigOn : sigOff, sig3: sigLevel >= 3 ? sigOn : sigOff, sig4: sigLevel >= 4 ? sigOn : sigOff,
+      accInt: Math.round(L.accuracy * 100), accFrac: L.accuracy, latency: L.latency,
+      precisionPct: Math.round(L.precision * 100) + '%', recallPct: Math.round(L.recall * 100) + '%', f1Pct: (L.f1 * 100).toFixed(0) + '%',
+      solarIn: L.solarIn.toFixed(1), draw: L.draw.toFixed(2), netFlow: (netFlow >= 0 ? '+' : '') + netFlow,
+      spraysToday: L.spraysToday, litersToday: L.litersToday.toFixed(2),
+      pesticideCut: L.pesticideCut, co2Saved: L.co2Saved, litersAvoided: L.litersAvoided,
+      pestSpark: this.spark(s.hist.pest), solarSpark: this.spark(s.hist.solar),
+      recentLogs: logsDecorated.slice(0, 4),
+      fleetMini, nodesOnline, nodesTotal: s.nodes.length,
+      liveLabel: s.paused ? 'PAUSED' : 'LIVE', liveDotColor: s.paused ? 'var(--ink-3)' : 'var(--bad)', liveDotAnim: s.paused ? '' : 'animation:pulse 1.4s infinite;',
+      unread: s.unread, hasUnread: s.unread > 0,
+      overlayOpen: !!s.overlay,
+      ovTheme: s.overlay === 'theme', ovNodes: s.overlay === 'nodes', ovAlerts: s.overlay === 'alerts', ovMore: s.overlay === 'more',
+      overlayMax: isMobile ? '100%' : '460px', overlayMargin: isMobile ? '0' : 'auto auto',
+      directions, nodeList, moreItems, alertList,
+      pestNowInt: L.pestNow,
+      onSimple: () => this.setMode('simple'), onAdvanced: () => this.setMode('advanced'),
+      onTogglePause: () => this.togglePause(),
+      onOpenTheme: () => this.openOverlay('theme'), onOpenNodes: () => this.openOverlay('nodes'), onOpenAlerts: () => this.openOverlay('alerts'), onOpenMore: () => this.openOverlay('more'),
+      onClose: () => this.closeOverlay(), onAck: () => this.ackAlerts(), stop: (e) => e && e.stopPropagation && e.stopPropagation(),
+      onGoSettings: () => this.go('settings'), onGoDetections: () => this.go('detections'), onGoLogs: () => this.go('logs'), onGoFleet: () => this.go('fleet'),
+      onSimpleCamera: () => this.setState({ mode: 'advanced', route: 'detections', overlay: null }),
+      // Detections
+      detFrame: 10200 + (L.packets % 400), camConf1: L.classes[0].conf.toFixed(2), camConf2: L.classes[1].conf.toFixed(2),
+      classesVM, latSpark, hasPhotos: s.photos.length > 0, onPhoto: (e) => this.onPhoto(e),
+      photoGrid: s.photos.map((ph, i) => React.createElement('div', { key: i, style: { aspectRatio: '1', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--glass-brd)' } }, React.createElement('img', { src: ph, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }))),
+      // Environment
+      gatePct: this.state.settings.gatePct,
+      gateExplain: soilSafe ? 'Spraying is permitted when pests exceed the EIL.' : 'All spray commands are held until the soil drains.',
+      airTempFrac, airTempV: L.airTemp.toFixed(1), soilTempFrac, soilTempV: L.soilTemp.toFixed(1),
+      humidityFrac, humidityV: L.humidity, phV: L.soilPH.toFixed(1), phMarker, ecV: L.soilEC.toFixed(2), ecPct, thermPos,
+      moistSpark,
+      // Power
+      battSpark, capWh: 37, capMah: '10,000',
+      autonomyDaysV: autonomyDays.toFixed(1), autonomyTarget: 7,
+      autoStatusColor: autoOk ? 'var(--ok)' : 'var(--warn)', autoStatusIcon: autoOk ? 'check_circle' : 'warning',
+      autoStatusWord: autoOk ? 'On track' : 'Below target', autoBarPct: Math.min(100, (autonomyDays / 14) * 100).toFixed(0) + '%',
+      netColor: netFlow >= 0 ? 'var(--ok)' : 'var(--bad)', powerLoads,
+      // Logs
+      logFilters, filteredLogs, filteredCount: filteredLogs.length,
+      // Fleet
+      mapNodes, fleetSprays: L.spraysToday + 5, fleetAvgBatt,
+      // Settings
+      settingsCats, settingsSections, settingsTwoCol: !isMobile, settingsOneCol: isMobile, modeOptions
+    };
+  }
+}
+</script>
+</body>
+</html>
