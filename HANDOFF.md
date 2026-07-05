@@ -32,6 +32,13 @@ how to verify it, what is still open.
 
 ## Log
 
+### 2026-07-05 — Fix Windows static-path bug caught by the exe CI job
+
+- `backend/server.py`: static route rewriting used `str(Path)`, which on
+  Windows emits backslashes and made `/vendor/*.js` 301→404 (first real
+  Windows run of the test suite, in the exe workflow's pre-build step).
+  Now `as_posix()`. **Verify:** exe check green on PR #3.
+
 ### 2026-07-05 — CI workflows: tests, Pages deploy, Windows exe, Android APK
 
 - `.github/workflows/tests.yml`: backend (14), decoder, Eq. 2 (14 +

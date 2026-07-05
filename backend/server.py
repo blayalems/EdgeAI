@@ -327,7 +327,9 @@ def make_handler(conn: sqlite3.Connection, token: str | None):
             target = static_path(route)
             if target is None:
                 return self._json({"error": "not found"}, 404)
-            self.path = "/" + str(target.relative_to(REPO_ROOT))
+            # as_posix(): on Windows str(Path) yields backslashes, which
+            # SimpleHTTPRequestHandler mis-parses into a 301/404 loop.
+            self.path = "/" + target.relative_to(REPO_ROOT).as_posix()
             return super().do_GET()
 
     return Handler
