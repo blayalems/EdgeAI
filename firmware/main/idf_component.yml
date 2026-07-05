@@ -1,0 +1,9 @@
+## BananaGuard node — managed component dependencies.
+## `idf.py build` resolves these from the Espressif component registry.
+dependencies:
+  idf: ">=5.1"
+  # TFLite-Micro runtime for the INT8 MobileNetV2 classifier.
+  espressif/esp-tflite-micro: "^1.3.1"
+  # NOTE: LoRaWAN (ttn-esp32) is not in the component registry. Clone it into
+  # firmware/components/ per README; lora_telemetry.c auto-detects it via
+  # __has_include("ttn.h") and falls back to a logging stub otherwise.
