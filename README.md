@@ -11,9 +11,10 @@ through The Things Network, and feed a web dashboard plus cloud log.
 |---|---|---|
 | `firmware/` | ESP-IDF node firmware: camera, ROI diff, inference, decision engine, actuation, LoRaWAN, deep sleep | Member 2, Weeks 4–13 |
 | `ml/` | Training pipeline: frozen split → augmented MobileNetV2 transfer learning → per-class P/R/F1 → INT8 quantization → C-array export → latency benchmarks | Member 2/3, Weeks 9–12 |
+| `decoder/` | TTN v3 JavaScript payload formatter for the 9-byte uplink + node tests | — |
 | `index.html`, `support.js`, `Ring.dc.html` | Web dashboard (single-page, no build step) | — |
 
-More folders (`backend/`, `decoder/`, `cloud/`, `test/`, `analysis/`)
+More folders (`backend/`, `cloud/`, `test/`, `analysis/`)
 land in subsequent commits — see `HANDOFF.md` for live status.
 
 ## Quick start

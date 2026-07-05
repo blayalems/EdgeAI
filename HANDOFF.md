@@ -10,7 +10,7 @@ how to verify it, what is still open.
 | Firmware (`firmware/`) | ✅ code-complete | Needs real model in `model_data.cc` + ttn-esp32 component + OTAA keys before field use |
 | Dashboard (`index.html`) | ✅ demo mode | Simulated data; live-data wiring pending |
 | ML pipeline (`ml/`) | ✅ code-complete | Needs the real image dataset; TF scripts compile-checked, stdlib scripts (split/export/latency-parse) exercised end-to-end |
-| TTN decoder (`decoder/`) | ⬜ pending | |
+| TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
 | Backend + cloud log (`backend/`, `cloud/`) | ⬜ pending | |
 | Test & validation (`test/`) | ⬜ pending | |
 | Statistical analysis (`analysis/`) | ⬜ pending | |
@@ -31,6 +31,17 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+### 2026-07-05 — TTN payload decoder (`decoder/`)
+
+- `ttn_payload_decoder.js`: TTS v3 `decodeUplink()` for the 9-byte v1
+  payload — big-endian uint16s, flag bits, `0xFF` VWC sentinel → `null`,
+  action code → name; rejects wrong length / unknown version with
+  `errors` instead of garbage data.
+- `test_decoder.js`: nominal, uint16 boundary, fault, lockout and error
+  vectors. **Verify:** `node decoder/test_decoder.js` → "all tests passed".
+- **Next:** backend (TTN webhook → SQLite → dashboard API) + Sheets
+  alternative in `cloud/`.
 
 ### 2026-07-05 — ML training pipeline (`ml/`) + on-device timing hook
 
