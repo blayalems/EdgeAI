@@ -14,10 +14,19 @@ through The Things Network, and feed a web dashboard plus cloud log.
 | `decoder/` | TTN v3 JavaScript payload formatter for the 9-byte uplink + node tests | — |
 | `backend/` | Zero-dependency Python listener: TTN webhook → SQLite → dashboard JSON API + static serving, plus a no-hardware uplink simulator | — |
 | `cloud/` | Lowest-code cloud log: TTN webhook → Google Sheets Apps Script (Grafana notes included) | — |
+| `test/` | Servo specimen rig (Arduino), host-side decision-engine mirror + Eq. 2 unit tests & scenario sim, Phase-1 ground-truth logger | Weeks 13–15 |
 | `index.html`, `support.js`, `Ring.dc.html`, `vendor/` | Web dashboard (single-page, no build step; React vendored for offline use). Auto-detects the backend: shows `LIVE · TTN` on real uplinks, `LIVE · SIM` standalone | — |
 
-More folders (`test/`, `analysis/`)
-land in subsequent commits — see `HANDOFF.md` for live status.
+`analysis/` lands in a subsequent commit — see `HANDOFF.md` for live
+status.
+
+## Tests
+
+```sh
+python3 backend/test_backend.py                        # backend (10 tests)
+node decoder/test_decoder.js                           # payload decoder
+( cd test/decision_sim && python3 test_decision_engine.py && python3 scenario_sim.py )
+```
 
 ## Quick start
 

@@ -12,7 +12,7 @@ how to verify it, what is still open.
 | ML pipeline (`ml/`) | ✅ code-complete | Needs the real image dataset; TF scripts compile-checked, stdlib scripts (split/export/latency-parse) exercised end-to-end |
 | TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
 | Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 10/10 integration tests pass; simulator exercises the full webhook→DB→API chain; Apps Script needs a live deploy to verify |
-| Test & validation (`test/`) | ⬜ pending | |
+| Test & validation (`test/`) | ✅ tested | 14/14 Eq. 2 unit tests + scenario invariants pass on host; servo rig needs bench bring-up with a real servo |
 | Statistical analysis (`analysis/`) | ⬜ pending | |
 
 ## Open risks (carry-over from planning)
@@ -31,6 +31,30 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+### 2026-07-05 — Test & validation code (`test/`)
+
+- `decision_sim/decision_engine.py`: line-for-line Python mirror of
+  `decision_engine.c` with the app_config constants; the executable spec
+  of Eq. 2.
+- `decision_sim/test_decision_engine.py`: 14 tests — strict `>` EIL
+  boundary, fault priority (camera > soil), all three lockouts with exact
+  boundary values, never-sprayed sentinel, plus a 3 584-combination sweep
+  asserting the two safety invariants (SPRAY ⟹ everything OK; fault ⟹
+  never SPRAY).
+- `decision_sim/scenario_sim.py`: multi-day traces with firmware-style
+  carried state (sprays_today, minutes-since-spray) — dry outbreak hits
+  the daily cap, wet week never sprays, mid-outbreak camera fault goes
+  FAULT, brown-out goes LOCKOUT; hard asserts at the end, `--csv` for
+  analysis.
+- `servo_rig/servo_rig.ino`: Arduino servo carousel, 6 known densities,
+  Fisher-Yates randomized trials, `RIG,ms,trial,pos,density` CSV over
+  serial.
+- `ground_truth_logger.py`: rig serial/captured-file/manual entry →
+  Phase-1 ground-truth CSV consumed by the analysis stage.
+- **Verify:** both Python harnesses pass (`test/decision_sim/`); rig
+  firmware compiles by inspection only (no Arduino toolchain here).
+- **Next:** statistical analysis (`analysis/`).
 
 ### 2026-07-05 — Dashboard wired to the backend (live data)
 
