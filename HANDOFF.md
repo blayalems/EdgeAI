@@ -11,7 +11,7 @@ how to verify it, what is still open.
 | Dashboard (`index.html`) | ✅ demo mode | Simulated data; live-data wiring pending |
 | ML pipeline (`ml/`) | ✅ code-complete | Needs the real image dataset; TF scripts compile-checked, stdlib scripts (split/export/latency-parse) exercised end-to-end |
 | TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
-| Backend + cloud log (`backend/`, `cloud/`) | ⬜ pending | |
+| Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 10/10 integration tests pass; simulator exercises the full webhook→DB→API chain; Apps Script needs a live deploy to verify |
 | Test & validation (`test/`) | ⬜ pending | |
 | Statistical analysis (`analysis/`) | ⬜ pending | |
 
@@ -31,6 +31,27 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+### 2026-07-05 — Backend (webhook → SQLite → API) + Sheets cloud log
+
+- `backend/server.py`: single stdlib file. `POST /ttn` accepts TTS v3
+  webhooks (prefers `decoded_payload`, falls back to decoding raw
+  `frm_payload` via `decode_payload.py` — the Python twin of the JS
+  decoder), optional `X-Webhook-Token` auth, SQLite storage, JSON API
+  (`/api/health|nodes|state|history|logs`) and static serving of the
+  dashboard from the repo root.
+- `backend/simulate_uplinks.py`: posts realistic raw-payload webhook
+  bodies for 3 fake nodes — full-chain demo with zero hardware.
+- `backend/test_backend.py`: 10 integration tests (auth, raw + decoded +
+  fault payloads, bad-payload rejection, derived state, per-device
+  latest, history ordering, logs, health, encode/decode round-trip).
+- `cloud/ttn_webhook_to_sheets.gs`: Apps Script web app appending one
+  sheet row per uplink, with its own raw-payload decoder and optional
+  `?token=` check; setup steps in the file header. Grafana-over-SQLite
+  note in `cloud/README.md`.
+- **Verify:** `python3 backend/test_backend.py` → OK (10 tests); smoke:
+  server + `simulate_uplinks.py --once` + `curl /api/nodes` exercised.
+- **Next:** wire the dashboard to `/api/*` (falls back to in-page sim).
 
 ### 2026-07-05 — TTN payload decoder (`decoder/`)
 
