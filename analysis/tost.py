@@ -74,8 +74,15 @@ def main():
     args = ap.parse_args()
 
     df = pd.read_csv(args.csv)
-    a = df[args.col_a].dropna().to_numpy()
-    b = df[args.col_b].dropna().to_numpy()
+    if args.paired:
+        # Pairing is by row: drop a row when EITHER value is missing.
+        # Column-wise dropna would silently re-pair across subjects.
+        pair = df[[args.col_a, args.col_b]].dropna()
+        a = pair[args.col_a].to_numpy()
+        b = pair[args.col_b].to_numpy()
+    else:
+        a = df[args.col_a].dropna().to_numpy()
+        b = df[args.col_b].dropna().to_numpy()
     fn = tost_paired if args.paired else tost_ind
     p, (lo, hi) = fn(a, b, args.delta, args.alpha)
 

@@ -26,7 +26,8 @@ from mad_filter import mad_mask
 
 # Pack constants — EDIT to the deployed pack.
 FULL_MV, EMPTY_MV = 4200, 3300         # single Li-ion cell window
-NIGHT_HOURS = (20, 5)                  # local hours treated as solar-free
+NIGHT_HOURS = (20, 5)                  # LOCAL hours treated as solar-free
+DEFAULT_TZ_OFFSET_H = 8.0              # Davao is UTC+8; --tz-offset overrides
 
 
 def load(path: str, node: str | None) -> pd.DataFrame:
@@ -47,6 +48,9 @@ def main():
     ap.add_argument("source", help=".db/.sqlite3 or .csv")
     ap.add_argument("--node", default=None)
     ap.add_argument("--capacity-mah", type=float, default=10000.0)
+    ap.add_argument("--tz-offset", type=float, default=DEFAULT_TZ_OFFSET_H,
+                    help="site UTC offset in hours; timestamps in the log "
+                         "are UTC but the night window is local time")
     ap.add_argument("--outdir", type=Path, default=Path("out"))
     args = ap.parse_args()
     args.outdir.mkdir(parents=True, exist_ok=True)
@@ -56,11 +60,12 @@ def main():
         raise SystemExit(f"only {len(df)} samples — need a longer log")
     df = df[mad_mask(df["batt_mv"])]
 
-    hrs = df["t"].dt.hour
+    local_t = df["t"] + pd.Timedelta(hours=args.tz_offset)
+    hrs = local_t.dt.hour
     night = df[(hrs >= NIGHT_HOURS[0]) | (hrs < NIGHT_HOURS[1])].copy()
-    # A night spans midnight; shifting by the morning cutoff groups
-    # 20:00-04:59 into one contiguous night id.
-    night["night_id"] = (night["t"]
+    # A night spans local midnight; shifting local time by the morning
+    # cutoff groups 20:00-04:59 into one contiguous night id.
+    night["night_id"] = (local_t.loc[night.index]
                          - pd.Timedelta(hours=NIGHT_HOURS[1])).dt.date
 
     slopes, weights = [], []

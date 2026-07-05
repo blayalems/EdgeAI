@@ -22,7 +22,10 @@ import figstyle
 import matplotlib.pyplot as plt
 
 
-def load_sprays(path: str) -> pd.Series:
+def load_log(path: str):
+    """Returns (spray timestamps, full-log span in days). The span comes
+    from ALL uplinks, not just sprays — otherwise a deployment with sprays
+    clustered mid-log would shrink the calendar baseline window."""
     if path.endswith((".db", ".sqlite3")):
         conn = sqlite3.connect(path)
         df = pd.read_sql_query(
@@ -30,7 +33,9 @@ def load_sprays(path: str) -> pd.Series:
     else:
         df = pd.read_csv(path)
     df["t"] = pd.to_datetime(df["received_at"], format="ISO8601", utc=True)
-    return df.loc[df["action"] == "SPRAY", "t"]
+    span_days = max(1.0, (df["t"].max() - df["t"].min()).total_seconds()
+                    / 86400)
+    return df.loc[df["action"] == "SPRAY", "t"], span_days
 
 
 def main():
@@ -50,11 +55,10 @@ def main():
     args = ap.parse_args()
     args.outdir.mkdir(parents=True, exist_ok=True)
 
-    sprays = load_sprays(args.source)
+    sprays, log_span = load_log(args.source)
     if sprays.empty:
         raise SystemExit("no SPRAY events in the log")
-    span_days = args.days or max(
-        1.0, (sprays.max() - sprays.min()).total_seconds() / 86400)
+    span_days = args.days or log_span
 
     n_bg = len(sprays)
     liters_bg = n_bg * args.liters_per_application

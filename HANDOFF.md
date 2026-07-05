@@ -32,6 +32,35 @@ how to verify it, what is still open.
 
 ## Log
 
+### 2026-07-05 — Post-merge fixes from the PR #2 code review (13 findings)
+
+- **backend/server.py**: static serving now uses a strict allowlist
+  (`index.html`, `support.js`, `Ring.dc.html`, `vendor/*.js`) — the repo
+  tree, including the SQLite DB and firmware sources, is no longer
+  downloadable from a public host (was P1). Partial `decoded_payload`
+  from a TTN formatter falls back to raw decoding instead of crashing on
+  NOT NULL columns; `?n=` limits are clamped to ≥1; "latest" state is
+  ordered by `received_at` (id tie-break) so a TTN redelivery of an old
+  frame can't regress the dashboard. Also: PyInstaller-frozen mode
+  support (bundle dir for static files, DB next to the .exe).
+- **ml/evaluate.py**: INT8 input quantization no longer divides by 255 —
+  the converter calibrates on 0–255 pixels, so the correct mapping is
+  `pixel/scale + zp` (was P1: reported INT8 metrics were of a washed-out
+  input distribution).
+- **analysis/**: paired TOST drops rows with a missing value in either
+  column (pairing preserved); impact window uses the full log span, not
+  first-spray→last-spray; battery night window applies a `--tz-offset`
+  (default UTC+8 Davao) before selecting solar-free hours.
+- **index.html**: polling starts on an empty backend and flips to live on
+  the first uplink (no reload needed); display IDs are assigned per
+  device_id first-seen and never reshuffled; the soil gate shows the
+  firmware's own `soil_safe` band decision instead of re-deriving it
+  one-sided; sensor faults render as a distinct red FAULT state instead
+  of masquerading as a wet-soil HELD.
+- **Verify:** `python3 backend/test_backend.py` → 14 tests OK (4 new
+  ones cover the backend fixes); headless-Chromium check confirms
+  SIM→TTN flip after the first uplink on a fresh DB.
+
 ### 2026-07-05 — Statistical analysis (`analysis/`)
 
 - `figstyle.py`: shared manuscript matplotlib defaults (serif, 3.5″

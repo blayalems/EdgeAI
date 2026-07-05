@@ -67,6 +67,9 @@ cd EdgeAI
   `firmware/main/lora_telemetry.h` is the single contract between firmware,
   decoder, backend and analysis. Change it in one place, bump the version
   byte, update all consumers in the same commit.
+- The backend serves only the allowlisted dashboard files over HTTP; API
+  "latest" state is ordered by uplink time so TTN redeliveries cannot
+  regress it.
 
 ## License
 
