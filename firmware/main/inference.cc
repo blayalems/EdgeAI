@@ -6,6 +6,7 @@
 
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "model_data.h"
 
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -106,10 +107,14 @@ extern "C" esp_err_t inference_run(const uint8_t *rgb888,
         in->data.int8[i] = (int8_t)q;
     }
 
+    const int64_t t0 = esp_timer_get_time();
     if (s_interpreter->Invoke() != kTfLiteOk) {
         ESP_LOGE(TAG, "Invoke failed");
         return ESP_FAIL;
     }
+    /* Machine-parseable timing line — consumed by ml/device_latency.py to
+     * retire the Week-4 "is the C6 fast enough" risk. Do not reformat. */
+    ESP_LOGI(TAG, "invoke_us=%lld", (long long)(esp_timer_get_time() - t0));
 
     TfLiteTensor *o = s_interpreter->output(0);
     const int classes = o->dims->data[o->dims->size - 1];

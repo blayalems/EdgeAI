@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# ML artifacts (large binaries stay out of git; the exported C array goes in firmware/)
+ml/data/
+ml/checkpoints/
+ml/exports/*.tflite
+ml/exports/*.h5
+ml/exports/*.keras
+ml/runs/
+
+# Backend runtime state
+backend/*.db
+backend/*.db-journal
+backend/*.sqlite3
+
+# Analysis outputs
+analysis/figures/
+analysis/out/
+
+# Node
+node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

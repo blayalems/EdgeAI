@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Local React first (offline-capable; SRI hashes match support.js pins).
+     If these files are absent, support.js falls back to the unpkg CDN. -->
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -739,6 +743,7 @@ class Component extends DCLogic {
     vw: (typeof window !== 'undefined' ? window.innerWidth : 1200),
     nodeId: 'N-01',
     paused: this.props.liveData === false,
+    live: false,
     unread: 2,
     now: Date.now(),
     photos: [],
@@ -790,11 +795,96 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._onResize);
     this._timer = setInterval(() => this.tick(), 1500);
     try { const p = JSON.parse(localStorage.getItem('bg_photos') || '[]'); if (p && p.length) this.setState({ photos: p }); } catch (e) {}
+    this.probeLive();
   }
-  componentWillUnmount() { clearInterval(this._timer); window.removeEventListener('resize', this._onResize); }
+  componentWillUnmount() { clearInterval(this._timer); clearInterval(this._poll); window.removeEventListener('resize', this._onResize); }
+
+  // ---- live data (backend/server.py). Fails silently -> in-page sim. ----
+  probeLive() {
+    if (typeof fetch !== 'function' || location.protocol === 'file:') return;
+    fetch('/api/health').then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(h => {
+        if (!h || !h.ok || !h.uplinks) return;
+        this.setState({ live: true });
+        this.pollLive();
+        this._poll = setInterval(() => this.pollLive(), 5000);
+      })
+      .catch(() => {});
+  }
+
+  pollLive() {
+    fetch('/api/nodes').then(r => r.json()).then(rows => {
+      if (!Array.isArray(rows) || !rows.length) return;
+      const defaults = this._nodeDefaults || (this._nodeDefaults = this.state.nodes);
+      const statusMap = { spraying: 'spray', fault: 'blocked', blocked: 'blocked', watch: 'watch', clear: 'clear' };
+      const mapped = rows.map((n, i) => {
+        const base = defaults[i] || { name: n.device_id, block: n.device_id, x: 18 + ((i * 23) % 62), y: 18 + ((i * 31) % 58), temp: 30 };
+        const ageMin = Math.max(0, Math.round((Date.now() - Date.parse(n.received_at)) / 60000));
+        return {
+          id: 'N-' + String(i + 1).padStart(2, '0'), device_id: n.device_id,
+          name: base.name, block: base.block, x: base.x, y: base.y, temp: base.temp,
+          battery: n.batt_pct, pest: n.n_pest,
+          soil: n.soil_vwc_pct == null ? 0 : n.soil_vwc_pct,
+          status: n.batt_pct < 15 ? 'lowbatt' : (statusMap[n.status] || 'clear'),
+          online: ageMin < 90,
+          last: ageMin < 1 ? 'just now' : ageMin + ' min ago'
+        };
+      });
+      let nodeId = this.state.nodeId;
+      if (!mapped.some(m => m.id === nodeId)) nodeId = mapped[0].id;
+      const sel = mapped.find(m => m.id === nodeId);
+      const cur = rows.find(n => n.device_id === sel.device_id);
+      const L = Object.assign({}, this.state.L, {
+        pestWindow: cur.n_pest,
+        battery: cur.batt_pct,
+        spraysToday: cur.sprays_today,
+        sprayStatus: cur.status === 'spraying' ? 'spraying' : (cur.status === 'blocked' || cur.status === 'fault') ? 'blocked' : 'idle'
+      });
+      if (cur.soil_vwc_pct != null) L.soilMoist = cur.soil_vwc_pct;
+      if (cur.rssi != null) L.rssi = Math.round(cur.rssi);
+      if (cur.snr != null) L.snr = cur.snr;
+      if (cur.sf) L.sf = cur.sf;
+      this.setState({ nodes: mapped, nodeId, L });
+      return Promise.all([
+        fetch('/api/logs?n=30').then(r => r.json()),
+        fetch('/api/history?node=' + encodeURIComponent(sel.device_id) + '&n=16').then(r => r.json())
+      ]).then(res => {
+        const logRows = res[0], histRows = res[1];
+        const agoOf = t => { const m = Math.max(0, Math.round((Date.now() - Date.parse(t)) / 60000)); return m < 1 ? 'just now' : m < 60 ? m + ' min' : Math.round(m / 60) + ' h'; };
+        const logs = logRows.map(lg => ({ ago: agoOf(lg.time), type: lg.type, title: lg.title + ' · ' + lg.node, detail: lg.detail, sev: lg.sev, icon: lg.icon }));
+        const pad = (arr, fb) => { const a = arr.slice(-16); while (a.length < 16) a.unshift(a.length ? a[0] : fb); return a; };
+        const h = this.state.hist;
+        const hist = {
+          pest: pad(histRows.map(x => x.n_pest), 0),
+          batt: pad(histRows.map(x => x.batt_pct), 50),
+          moist: pad(histRows.map(x => (x.soil_vwc_pct == null ? 0 : x.soil_vwc_pct)), 0),
+          solar: h.solar, lat: h.lat
+        };
+        this.setState({ logs, hist });
+      });
+    }).catch(() => {});
+  }
+
+  // In live mode only the fields the 9-byte uplink does NOT carry keep
+  // simulating (air temp, humidity, solar model); telemetry fields come
+  // from pollLive() and must not be overwritten by the random walk.
+  tickLive() {
+    this.setState(s => {
+      const L = Object.assign({}, s.L);
+      const w = (v, d, lo, hi) => Math.max(lo, Math.min(hi, v + (Math.random() - 0.5) * d));
+      L.airTemp = +w(L.airTemp, 0.3, 24, 37).toFixed(1);
+      L.humidity = Math.round(w(L.humidity, 1.6, 45, 96));
+      const hr = new Date().getHours() + new Date().getMinutes() / 60;
+      const daylight = Math.max(0, Math.sin(((hr - 6) / 12) * Math.PI));
+      L.solarIn = +(10 * daylight * (0.68 + Math.random() * 0.32)).toFixed(1);
+      L.draw = +w(L.draw, 0.15, 0.7, 1.7).toFixed(2);
+      return { L, now: Date.now() };
+    });
+  }
 
   tick() {
     if (this.state.paused) { this.setState({ now: Date.now() }); return; }
+    if (this.state.live) { this.tickLive(); return; }
     let evt = null;
     this.setState(s => {
       const L = Object.assign({}, s.L);
@@ -1216,7 +1306,7 @@ class Component extends DCLogic {
       pestSpark: this.spark(s.hist.pest), solarSpark: this.spark(s.hist.solar),
       recentLogs: logsDecorated.slice(0, 4),
       fleetMini, nodesOnline, nodesTotal: s.nodes.length,
-      liveLabel: s.paused ? 'PAUSED' : 'LIVE', liveDotColor: s.paused ? 'var(--ink-3)' : 'var(--bad)', liveDotAnim: s.paused ? '' : 'animation:pulse 1.4s infinite;',
+      liveLabel: s.paused ? 'PAUSED' : (s.live ? 'LIVE · TTN' : 'LIVE · SIM'), liveDotColor: s.paused ? 'var(--ink-3)' : (s.live ? 'var(--ok)' : 'var(--bad)'), liveDotAnim: s.paused ? '' : 'animation:pulse 1.4s infinite;',
       unread: s.unread, hasUnread: s.unread > 0,
       overlayOpen: !!s.overlay,
       ovTheme: s.overlay === 'theme', ovNodes: s.overlay === 'nodes', ovAlerts: s.overlay === 'alerts', ovMore: s.overlay === 'more',
