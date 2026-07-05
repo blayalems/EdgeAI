@@ -833,6 +833,7 @@ class Component extends DCLogic {
           name: base.name, block: base.block, x: base.x, y: base.y, temp: base.temp,
           battery: n.batt_pct, pest: n.n_pest,
           soil: n.soil_vwc_pct == null ? 0 : n.soil_vwc_pct,
+          soilSafe: n.soil_safe, spraysToday: n.sprays_today, rawStatus: n.status,
           status: n.batt_pct < 15 ? 'lowbatt' : (statusMap[n.status] || 'clear'),
           online: ageMin < 90,
           last: ageMin < 1 ? 'just now' : ageMin + ' min ago'
@@ -991,6 +992,14 @@ class Component extends DCLogic {
     this.setState(s => {
       const nd = s.nodes.find(n => n.id === id) || s.nodes[0];
       const L = Object.assign({}, s.L, { soilMoist: nd.soil, battery: nd.battery, pestWindow: nd.pest, airTemp: nd.temp });
+      // Live mode: the safety flags must switch WITH the node — showing
+      // the previous node's FAULT/gate state for up to 5 s is wrong.
+      if (s.live && nd.device_id) {
+        L.soilSafeLive = nd.soilSafe;
+        L.faultLive = nd.rawStatus === 'fault';
+        L.sprayStatus = nd.rawStatus === 'spraying' ? 'spraying' : nd.rawStatus === 'blocked' ? 'blocked' : 'idle';
+        if (nd.spraysToday != null) L.spraysToday = nd.spraysToday;
+      }
       return { nodeId: id, L, overlay: null };
     });
   }

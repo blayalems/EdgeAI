@@ -173,6 +173,25 @@ class BackendTest(unittest.TestCase):
         n05 = next(n for n in nodes if n["device_id"] == "bg-n05")
         self.assertEqual(n05["n_pest"], 9)
 
+    def test_15_mixed_precision_timestamps_order_chronologically(self):
+        # Raw text ordering would put "...00Z" AFTER "...00.500Z"; the
+        # server must normalize precision so the .500 frame stays latest.
+        newer = tts_body("bg-n06", dict(STATE, n_pest=7))
+        newer["uplink_message"]["received_at"] = "2026-07-05T10:00:00.500Z"
+        older = tts_body("bg-n06", dict(STATE, n_pest=2))
+        older["uplink_message"]["received_at"] = "2026-07-05T10:00:00Z"
+        self.hook(newer)
+        self.hook(older)
+        _, s = get(self.base + "/api/state?node=bg-n06")
+        self.assertEqual(s["n_pest"], 7)
+        # nanosecond input (TTN native) must not 500
+        nano = tts_body("bg-n06", dict(STATE, n_pest=4))
+        nano["uplink_message"]["received_at"] = "2026-07-05T10:00:01.123456789Z"
+        status, _ = self.hook(nano)
+        self.assertEqual(status, 200)
+        _, s = get(self.base + "/api/state?node=bg-n06")
+        self.assertEqual(s["n_pest"], 4)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

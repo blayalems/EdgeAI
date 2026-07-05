@@ -32,6 +32,21 @@ how to verify it, what is still open.
 
 ## Log
 
+### 2026-07-05 — Codex round-2 fixes: timestamp ordering, node-switch staleness
+
+- `backend/server.py`: `received_at` is normalized on insert to UTC with
+  fixed microsecond precision (`norm_time()`), so SQLite's lexicographic
+  `MAX`/`ORDER BY` is truly chronological across mixed RFC3339 forms
+  (`…00Z` vs `…00.500Z` vs TTN's nanoseconds). Test 15 covers it.
+- `index.html`: `selectNode()` now switches the live safety flags
+  (`soilSafeLive`, `faultLive`, spray status, sprays-today) together with
+  the node instead of showing the previous node's FAULT/gate state until
+  the next 5 s poll; mapped nodes carry `soilSafe`/`rawStatus` for this.
+- Third Codex finding (backslash static paths) was already fixed by the
+  `static_route()` rewrite in the previous commit.
+- **Verify:** `python3 backend/test_backend.py` → 15 tests OK; Chromium
+  smoke (SIM→TTN flip) still passes.
+
 ### 2026-07-05 — Fix frozen-exe vendor serving (Windows 8.3 short names)
 
 - `backend/server.py`: the vendor allowlist returned a `resolve()`d path

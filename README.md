@@ -80,7 +80,8 @@ cd EdgeAI
   decoder, backend and analysis. Change it in one place, bump the version
   byte, update all consumers in the same commit.
 - The backend serves only the allowlisted dashboard files over HTTP; API
-  "latest" state is ordered by uplink time so TTN redeliveries cannot
+  "latest" state is ordered by uplink time (normalized to fixed-precision
+  UTC on insert) so TTN redeliveries and mixed timestamp formats cannot
   regress it.
 
 ## License

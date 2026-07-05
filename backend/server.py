@@ -87,7 +87,21 @@ def open_db(path: str) -> sqlite3.Connection:
 
 
 def utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")
+
+
+def norm_time(ts) -> str:
+    """Normalize any RFC3339 timestamp to UTC with fixed microsecond
+    precision so lexicographic order in SQLite equals chronological
+    order ('...00Z' would otherwise sort AFTER '...00.500Z'). Falls back
+    to now() on missing/unparseable input."""
+    try:
+        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return utcnow()
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).isoformat(timespec="microseconds")
 
 
 # Single Li-ion cell: 3.30 V empty (BG_BATT_CRITICAL_MV) … 4.20 V full.
@@ -126,7 +140,7 @@ def extract_uplink(msg: dict) -> dict:
         except (binascii.Error, ValueError):
             pass
     return {
-        "received_at": up.get("received_at") or utcnow(),
+        "received_at": norm_time(up.get("received_at")),
         "device_id": dev,
         "fport": up.get("f_port"),
         "fcnt": up.get("f_cnt"),
