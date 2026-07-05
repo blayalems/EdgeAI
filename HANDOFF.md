@@ -9,7 +9,7 @@ how to verify it, what is still open.
 |---|---|---|
 | Firmware (`firmware/`) | ✅ code-complete | Needs real model in `model_data.cc` + ttn-esp32 component + OTAA keys before field use |
 | Dashboard (`index.html`) | ✅ demo mode | Simulated data; live-data wiring pending |
-| ML pipeline (`ml/`) | ⬜ pending | |
+| ML pipeline (`ml/`) | ✅ code-complete | Needs the real image dataset; TF scripts compile-checked, stdlib scripts (split/export/latency-parse) exercised end-to-end |
 | TTN decoder (`decoder/`) | ⬜ pending | |
 | Backend + cloud log (`backend/`, `cloud/`) | ⬜ pending | |
 | Test & validation (`test/`) | ⬜ pending | |
@@ -31,6 +31,34 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+### 2026-07-05 — ML training pipeline (`ml/`) + on-device timing hook
+
+- `split_dataset.py`: hash-of-path deterministic split; test set frozen in
+  `splits/test_manifest.json` before any training — files can never leave
+  the test set, and a missing frozen file is a hard error.
+- `train_mobilenetv2.py`: Keras augmentation (flip/rotate/zoom/translate/
+  brightness/contrast), MobileNetV2 alpha=0.35 @ 96×96 transfer learning
+  in two phases (frozen head, then top-40-layer fine-tune at LR/10), class
+  weights, early stopping.
+- `evaluate.py`: per-class precision/recall/F1 + confusion matrix on the
+  frozen test set, for BOTH the float .keras and the INT8 .tflite (same
+  code path ⇒ honest quantization-loss numbers), plus the firmware
+  operating point (weevil @ ≥60 % confidence).
+- `quantize_int8.py`: full-INT8 PTQ, int8 in/out, representative data from
+  the train split only; asserts int8 I/O and warns near the flash budget.
+- `export_c_array.py`: .tflite → `firmware/main/model_data.cc`
+  (`alignas(16)`, `g_model_data[_len]`); generated file syntax-checked
+  against the real `model_data.h`.
+- `benchmark_latency.py` (host sanity) + `device_latency.py` (parses
+  `invoke_us=` serial lines, PASS/FAIL vs budget). **`inference.cc` now
+  logs `invoke_us=<n>` per classification** — this is the Week-4 C6-risk
+  instrument.
+- **Verify:** `cd ml && python3 -m py_compile *.py`; split determinism and
+  the exporter were exercised with synthetic data (TensorFlow itself not
+  installable in this session — train/quantize scripts are compile-checked
+  only, run them where TF ≥ 2.15 is available).
+- **Next:** TTN payload decoder (`decoder/`).
 
 ### 2026-07-05 — Repo hygiene: README, HANDOFF, LICENSE, .gitignore
 

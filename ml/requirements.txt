@@ -1,0 +1,5 @@
+# Training / quantization (Weeks 9-12). Pin major versions for reproducibility.
+tensorflow>=2.15,<2.20
+numpy>=1.26
+# split_dataset.py, export_c_array.py and device_latency.py are stdlib-only
+# and run without any of the above.

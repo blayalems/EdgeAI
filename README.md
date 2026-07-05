@@ -10,9 +10,10 @@ through The Things Network, and feed a web dashboard plus cloud log.
 | Folder | What lives here | Owner / timeline |
 |---|---|---|
 | `firmware/` | ESP-IDF node firmware: camera, ROI diff, inference, decision engine, actuation, LoRaWAN, deep sleep | Member 2, Weeks 4–13 |
+| `ml/` | Training pipeline: frozen split → augmented MobileNetV2 transfer learning → per-class P/R/F1 → INT8 quantization → C-array export → latency benchmarks | Member 2/3, Weeks 9–12 |
 | `index.html`, `support.js`, `Ring.dc.html` | Web dashboard (single-page, no build step) | — |
 
-More folders (`ml/`, `backend/`, `decoder/`, `cloud/`, `test/`, `analysis/`)
+More folders (`backend/`, `decoder/`, `cloud/`, `test/`, `analysis/`)
 land in subsequent commits — see `HANDOFF.md` for live status.
 
 ## Quick start
@@ -23,6 +24,10 @@ cd EdgeAI
 ```
 
 - **Firmware** — see `firmware/README.md` (ESP-IDF ≥ 5.1).
+- **ML pipeline** — see `ml/README.md`; end-to-end is
+  `split_dataset.py → train_mobilenetv2.py → evaluate.py →
+  quantize_int8.py → export_c_array.py` (the last step writes
+  `firmware/main/model_data.cc`).
 - **Dashboard** — open `index.html` in a browser (runs on simulated data
   until the backend is up).
 
