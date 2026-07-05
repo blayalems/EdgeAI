@@ -8,7 +8,7 @@ how to verify it, what is still open.
 | Component | Status | Notes |
 |---|---|---|
 | Firmware (`firmware/`) | ✅ code-complete | Needs real model in `model_data.cc` + ttn-esp32 component + OTAA keys before field use |
-| Dashboard (`index.html`) | ✅ demo mode | Simulated data; live-data wiring pending |
+| Dashboard (`index.html`) | ✅ live-wired | Polls `/api/*` when served by the backend (verified in headless Chromium); falls back to in-page sim on `file://` or without backend |
 | ML pipeline (`ml/`) | ✅ code-complete | Needs the real image dataset; TF scripts compile-checked, stdlib scripts (split/export/latency-parse) exercised end-to-end |
 | TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
 | Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 10/10 integration tests pass; simulator exercises the full webhook→DB→API chain; Apps Script needs a live deploy to verify |
@@ -31,6 +31,25 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+### 2026-07-05 — Dashboard wired to the backend (live data)
+
+- `index.html`: on load, probes `/api/health`; if the backend answers with
+  stored uplinks it flips to live mode — polls `/api/nodes`, `/api/logs`,
+  `/api/history` every 5 s, maps device rows onto the fleet/node views,
+  and stops the random-walk simulation for every telemetry-backed field
+  (pest window, soil VWC, battery, spray status, sprays today, RSSI/SNR/SF,
+  history sparklines). Fields the 9-byte uplink does not carry (air temp,
+  humidity, solar model) keep their cosmetic simulation. Top-bar badge now
+  reads `LIVE · TTN` (green) vs `LIVE · SIM` (red).
+- `vendor/`: React 18.3.1 UMD builds committed locally and loaded before
+  `support.js` (which skips its CDN fetch when `window.React` exists) —
+  the dashboard now works fully offline; file hashes verified against the
+  SRI pins inside `support.js`.
+- **Verify:** `python3 backend/server.py` + `simulate_uplinks.py --once`,
+  open `http://localhost:8000` → badge shows LIVE · TTN and node cards
+  show the simulator's values. Confirmed in headless Chromium.
+- **Next:** test & validation code (`test/`).
 
 ### 2026-07-05 — Backend (webhook → SQLite → API) + Sheets cloud log
 
