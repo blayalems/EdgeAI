@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Backend integration tests
+        run: python backend/test_backend.py
+
+      - name: TTN decoder tests
+        run: node decoder/test_decoder.js
+
+      - name: Decision engine (Eq. 2) unit tests + scenario invariants
+        working-directory: test/decision_sim
+        run: |
+          python test_decision_engine.py
+          python scenario_sim.py
+
+      - name: Compile-check every Python script (no heavy deps needed)
+        run: |
+          python -m py_compile ml/*.py analysis/*.py backend/*.py \
+            test/decision_sim/*.py test/ground_truth_logger.py

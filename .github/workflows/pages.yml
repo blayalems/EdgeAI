@@ -1,0 +1,45 @@
+# Publishes the dashboard to GitHub Pages. One-time repo setup:
+# Settings -> Pages -> Source: "GitHub Actions".
+# On Pages there is no backend, so the dashboard runs in LIVE-SIM demo
+# mode — exactly what a public showcase needs.
+name: Deploy dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - support.js
+      - Ring.dc.html
+      - vendor/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble static site (dashboard files only)
+        run: |
+          mkdir _site
+          cp index.html support.js Ring.dc.html _site/
+          cp -r vendor _site/vendor
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -27,6 +27,18 @@ node firmware ──9-byte uplink──▶ TTN ──webhook──▶ backend/se
      (trained INT8 model)              (Apps Script)    └──▶ /api/*  (live data)
 ```
 
+## CI / builds (GitHub Actions)
+
+| Workflow | Trigger | Output |
+|---|---|---|
+| `tests.yml` | every push & PR | backend + decoder + Eq. 2 suites, py_compile sweep |
+| `pages.yml` | push to `main` | dashboard on GitHub Pages (demo/SIM mode). One-time setup: **Settings → Pages → Source: GitHub Actions** |
+| `windows-exe.yml` | push to `main`, `v*` tags, PRs touching backend/dashboard | `BananaGuard.exe` — server + dashboard in one file, smoke-tested in CI; attached to Releases on tags |
+| `android-apk.yml` | push to `main`, `v*` tags, PRs touching the dashboard | debug-signed `BananaGuard-debug.apk` (Capacitor WebView shell, sideload-ready); attached to Releases on tags |
+
+Tag a release (`git tag v0.1.0 && git push --tags`) to get the .exe and
+.apk attached to a GitHub Release automatically.
+
 ## Tests
 
 ```sh

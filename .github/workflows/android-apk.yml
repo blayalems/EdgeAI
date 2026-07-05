@@ -1,0 +1,68 @@
+# Wraps the dashboard in a Capacitor WebView shell and builds a
+# debug-signed APK (sideload-ready for field phones; no Play signing).
+# Inside the APK there is no backend, so the app runs in LIVE-SIM mode —
+# point field phones at a deployed backend URL for live data.
+# Artifact on every run; attached to the GitHub Release on v* tags.
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - index.html
+      - support.js
+      - Ring.dc.html
+      - vendor/**
+      - .github/workflows/android-apk.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write # release upload on tags
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Assemble web assets
+        run: |
+          mkdir -p appshell/www
+          cp index.html support.js Ring.dc.html appshell/www/
+          cp -r vendor appshell/www/vendor
+
+      - name: Generate Capacitor Android shell
+        working-directory: appshell
+        run: |
+          npm init -y
+          npm install @capacitor/core@^7 @capacitor/cli@^7 @capacitor/android@^7
+          npx cap init BananaGuard com.bananaguard.dashboard --web-dir=www
+          npx cap add android
+          npx cap copy android
+
+      - name: Build debug APK
+        working-directory: appshell/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename artifact
+        run: cp appshell/android/app/build/outputs/apk/debug/app-debug.apk BananaGuard-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BananaGuard-android
+          path: BananaGuard-debug.apk
+
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: BananaGuard-debug.apk

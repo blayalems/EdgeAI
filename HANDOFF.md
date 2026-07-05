@@ -32,6 +32,27 @@ how to verify it, what is still open.
 
 ## Log
 
+### 2026-07-05 — CI workflows: tests, Pages deploy, Windows exe, Android APK
+
+- `.github/workflows/tests.yml`: backend (14), decoder, Eq. 2 (14 +
+  scenario invariants) suites plus a py_compile sweep on every push/PR.
+- `.github/workflows/pages.yml`: publishes the dashboard (allowlisted
+  files only) to GitHub Pages on pushes to main. **One-time setup
+  required: repo Settings → Pages → Source = "GitHub Actions".** Pages
+  has no backend, so it serves the LIVE·SIM demo.
+- `.github/workflows/windows-exe.yml`: PyInstaller onefile build of
+  `backend/server.py` with the dashboard bundled (`server.py` gained
+  frozen-mode handling: static files from the bundle, DB next to the
+  .exe). CI smoke-tests the built exe (health + page + vendor JS over
+  HTTP) before uploading the artifact; attaches to Releases on `v*` tags.
+- `.github/workflows/android-apk.yml`: generates a Capacitor 7 WebView
+  shell around the dashboard and builds a debug-signed, sideload-ready
+  APK; artifact on every run, Release asset on `v*` tags.
+- **Verify:** YAML parsed clean locally; the exe and APK jobs run on this
+  PR (pull_request triggers) — check the Actions tab for green runs. The
+  Pages job needs the one-time settings switch before its first deploy.
+- **Next:** none — watch the PR checks.
+
 ### 2026-07-05 — Post-merge fixes from the PR #2 code review (13 findings)
 
 - **backend/server.py**: static serving now uses a strict allowlist
