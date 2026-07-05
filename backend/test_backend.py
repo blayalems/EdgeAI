@@ -130,6 +130,68 @@ class BackendTest(unittest.TestCase):
         self.assertEqual(dp.decode_uplink(dp.encode_uplink(STATE)),
                          dict(STATE, version=1))
 
+    def test_11_partial_decoded_payload_falls_back_to_raw(self):
+        body = tts_body("bg-n04", STATE)
+        # formatter emitted only n_pest — must fall back to frm_payload
+        body["uplink_message"]["decoded_payload"] = {"n_pest": 3}
+        status, out = self.hook(body)
+        self.assertEqual(status, 200)
+        _, s = get(self.base + "/api/state?node=bg-n04")
+        self.assertEqual(s["n_pest"], STATE["n_pest"])  # raw won
+        self.assertEqual(s["batt_mv"], STATE["batt_mv"])
+
+    def test_12_negative_limit_clamped(self):
+        _, hist = get(self.base + "/api/history?node=bg-n01&n=-1")
+        self.assertEqual(len(hist), 1)
+        _, logs = get(self.base + "/api/logs?node=bg-n01&n=-5")
+        self.assertEqual(len(logs), 1)
+
+    def test_13_static_allowlist_only(self):
+        _, _ = get(self.base + "/api/health")  # server alive
+        for blocked in ("/backend/server.py", "/backend/bananaguard.db",
+                        "/firmware/main/app_config.h", "/README.md",
+                        "/vendor/../backend/server.py"):
+            with self.assertRaises(urllib.error.HTTPError, msg=blocked) as cm:
+                get(self.base + blocked)
+            self.assertEqual(cm.exception.code, 404, blocked)
+        with urllib.request.urlopen(self.base + "/index.html") as r:
+            self.assertEqual(r.status, 200)
+        with urllib.request.urlopen(
+                self.base + "/vendor/react.production.min.js") as r:
+            self.assertEqual(r.status, 200)
+
+    def test_14_stale_redelivery_does_not_regress_state(self):
+        newer = tts_body("bg-n05", dict(STATE, n_pest=9))
+        newer["uplink_message"]["received_at"] = "2026-07-05T10:00:00+00:00"
+        older = tts_body("bg-n05", dict(STATE, n_pest=1))
+        older["uplink_message"]["received_at"] = "2026-07-05T08:00:00+00:00"
+        self.hook(newer)
+        self.hook(older)   # TTN redelivery arrives late
+        _, s = get(self.base + "/api/state?node=bg-n05")
+        self.assertEqual(s["n_pest"], 9)
+        _, nodes = get(self.base + "/api/nodes")
+        n05 = next(n for n in nodes if n["device_id"] == "bg-n05")
+        self.assertEqual(n05["n_pest"], 9)
+
+    def test_15_mixed_precision_timestamps_order_chronologically(self):
+        # Raw text ordering would put "...00Z" AFTER "...00.500Z"; the
+        # server must normalize precision so the .500 frame stays latest.
+        newer = tts_body("bg-n06", dict(STATE, n_pest=7))
+        newer["uplink_message"]["received_at"] = "2026-07-05T10:00:00.500Z"
+        older = tts_body("bg-n06", dict(STATE, n_pest=2))
+        older["uplink_message"]["received_at"] = "2026-07-05T10:00:00Z"
+        self.hook(newer)
+        self.hook(older)
+        _, s = get(self.base + "/api/state?node=bg-n06")
+        self.assertEqual(s["n_pest"], 7)
+        # nanosecond input (TTN native) must not 500
+        nano = tts_body("bg-n06", dict(STATE, n_pest=4))
+        nano["uplink_message"]["received_at"] = "2026-07-05T10:00:01.123456789Z"
+        status, _ = self.hook(nano)
+        self.assertEqual(status, 200)
+        _, s = get(self.base + "/api/state?node=bg-n06")
+        self.assertEqual(s["n_pest"], 4)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

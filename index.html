@@ -804,8 +804,10 @@ class Component extends DCLogic {
     if (typeof fetch !== 'function' || location.protocol === 'file:') return;
     fetch('/api/health').then(r => (r.ok ? r.json() : Promise.reject()))
       .then(h => {
-        if (!h || !h.ok || !h.uplinks) return;
-        this.setState({ live: true });
+        if (!h || !h.ok) return;
+        // Poll even with zero uplinks stored: the first TTN uplink after
+        // page load must flip the UI to live without a manual reload.
+        // pollLive() sets live:true once rows actually exist.
         this.pollLive();
         this._poll = setInterval(() => this.pollLive(), 5000);
       })
@@ -816,15 +818,22 @@ class Component extends DCLogic {
     fetch('/api/nodes').then(r => r.json()).then(rows => {
       if (!Array.isArray(rows) || !rows.length) return;
       const defaults = this._nodeDefaults || (this._nodeDefaults = this.state.nodes);
-      const statusMap = { spraying: 'spray', fault: 'blocked', blocked: 'blocked', watch: 'watch', clear: 'clear' };
-      const mapped = rows.map((n, i) => {
+      const statusMap = { spraying: 'spray', fault: 'fault', blocked: 'blocked', watch: 'watch', clear: 'clear' };
+      // Display IDs are assigned per device_id in first-seen order and
+      // never reshuffled — a device joining/leaving the fleet must not
+      // silently re-point N-01 at different hardware.
+      const ords = this._ordinals || (this._ordinals = {});
+      rows.forEach(n => { if (!(n.device_id in ords)) ords[n.device_id] = 'N-' + String(Object.keys(ords).length + 1).padStart(2, '0'); });
+      const mapped = rows.map(n => {
+        const i = parseInt(ords[n.device_id].slice(2), 10) - 1;
         const base = defaults[i] || { name: n.device_id, block: n.device_id, x: 18 + ((i * 23) % 62), y: 18 + ((i * 31) % 58), temp: 30 };
         const ageMin = Math.max(0, Math.round((Date.now() - Date.parse(n.received_at)) / 60000));
         return {
-          id: 'N-' + String(i + 1).padStart(2, '0'), device_id: n.device_id,
+          id: ords[n.device_id], device_id: n.device_id,
           name: base.name, block: base.block, x: base.x, y: base.y, temp: base.temp,
           battery: n.batt_pct, pest: n.n_pest,
           soil: n.soil_vwc_pct == null ? 0 : n.soil_vwc_pct,
+          soilSafe: n.soil_safe, spraysToday: n.sprays_today, rawStatus: n.status,
           status: n.batt_pct < 15 ? 'lowbatt' : (statusMap[n.status] || 'clear'),
           online: ageMin < 90,
           last: ageMin < 1 ? 'just now' : ageMin + ' min ago'
@@ -838,13 +847,15 @@ class Component extends DCLogic {
         pestWindow: cur.n_pest,
         battery: cur.batt_pct,
         spraysToday: cur.sprays_today,
-        sprayStatus: cur.status === 'spraying' ? 'spraying' : (cur.status === 'blocked' || cur.status === 'fault') ? 'blocked' : 'idle'
+        soilSafeLive: cur.soil_safe,      // firmware's own gate decision
+        faultLive: cur.status === 'fault',
+        sprayStatus: cur.status === 'spraying' ? 'spraying' : cur.status === 'blocked' ? 'blocked' : 'idle'
       });
       if (cur.soil_vwc_pct != null) L.soilMoist = cur.soil_vwc_pct;
       if (cur.rssi != null) L.rssi = Math.round(cur.rssi);
       if (cur.snr != null) L.snr = cur.snr;
       if (cur.sf) L.sf = cur.sf;
-      this.setState({ nodes: mapped, nodeId, L });
+      this.setState({ nodes: mapped, nodeId, L, live: true });
       return Promise.all([
         fetch('/api/logs?n=30').then(r => r.json()),
         fetch('/api/history?node=' + encodeURIComponent(sel.device_id) + '&n=16').then(r => r.json())
@@ -981,6 +992,14 @@ class Component extends DCLogic {
     this.setState(s => {
       const nd = s.nodes.find(n => n.id === id) || s.nodes[0];
       const L = Object.assign({}, s.L, { soilMoist: nd.soil, battery: nd.battery, pestWindow: nd.pest, airTemp: nd.temp });
+      // Live mode: the safety flags must switch WITH the node — showing
+      // the previous node's FAULT/gate state for up to 5 s is wrong.
+      if (s.live && nd.device_id) {
+        L.soilSafeLive = nd.soilSafe;
+        L.faultLive = nd.rawStatus === 'fault';
+        L.sprayStatus = nd.rawStatus === 'spraying' ? 'spraying' : nd.rawStatus === 'blocked' ? 'blocked' : 'idle';
+        if (nd.spraysToday != null) L.spraysToday = nd.spraysToday;
+      }
       return { nodeId: id, L, overlay: null };
     });
   }
@@ -1067,6 +1086,7 @@ class Component extends DCLogic {
       spray: { word: 'SPRAY', color: 'var(--secondary)', icon: 'sprinkler' },
       watch: { word: 'WATCH', color: 'var(--tertiary)', icon: 'visibility' },
       blocked: { word: 'HELD', color: 'var(--warn)', icon: 'pause_circle' },
+      fault: { word: 'FAULT', color: 'var(--bad)', icon: 'error' },
       clear: { word: 'CLEAR', color: 'var(--ok)', icon: 'check_circle' },
       lowbatt: { word: 'LOW BAT', color: 'var(--bad)', icon: 'battery_alert' },
       offline: { word: 'OFFLINE', color: 'var(--ink-3)', icon: 'cloud_off' }
@@ -1083,10 +1103,13 @@ class Component extends DCLogic {
     const isSimple = s.mode === 'simple', isAdvanced = s.mode === 'advanced';
     const eil = this.state.settings.eil || 5;
     const ratio = L.pestWindow / eil;
-    const soilSafe = L.soilMoist < this.state.settings.gatePct;
+    // Live mode: trust the firmware's Soil_safe (a 20-60% VWC band, not
+    // the dashboard's one-sided slider) — never re-derive it locally.
+    const soilSafe = (s.live && L.soilSafeLive != null) ? L.soilSafeLive : (L.soilMoist < this.state.settings.gatePct);
 
     let statusWord, statusPlain, statusColor, statusIcon;
-    if (L.sprayStatus === 'spraying') { statusWord = 'SPRAYING'; statusPlain = 'Targeted spray is active — pests crossed the action threshold and the soil is dry enough to treat.'; statusColor = 'var(--secondary)'; statusIcon = 'sprinkler'; }
+    if (s.live && L.faultLive) { statusWord = 'FAULT'; statusPlain = 'A sensor on this node reported a fault. Spraying is disabled until it is inspected — no chemicals can be released.'; statusColor = 'var(--bad)'; statusIcon = 'error'; }
+    else if (L.sprayStatus === 'spraying') { statusWord = 'SPRAYING'; statusPlain = 'Targeted spray is active — pests crossed the action threshold and the soil is dry enough to treat.'; statusColor = 'var(--secondary)'; statusIcon = 'sprinkler'; }
     else if (L.sprayStatus === 'blocked') { statusWord = 'HELD'; statusPlain = 'Pests are high, but the soil is too wet. Spraying is paused to protect the soil and prevent runoff.'; statusColor = 'var(--warn)'; statusIcon = 'pause_circle'; }
     else if (ratio >= 0.6) { statusWord = 'WATCH'; statusPlain = 'Pest activity is rising and being monitored closely. No spray needed yet.'; statusColor = 'var(--tertiary)'; statusIcon = 'visibility'; }
     else { statusWord = 'ALL CLEAR'; statusPlain = 'No action needed. Pest levels are low and your crop is protected.'; statusColor = 'var(--ok)'; statusIcon = 'verified'; }

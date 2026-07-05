@@ -32,6 +32,95 @@ how to verify it, what is still open.
 
 ## Log
 
+### 2026-07-05 — Codex round-2 fixes: timestamp ordering, node-switch staleness
+
+- `backend/server.py`: `received_at` is normalized on insert to UTC with
+  fixed microsecond precision (`norm_time()`), so SQLite's lexicographic
+  `MAX`/`ORDER BY` is truly chronological across mixed RFC3339 forms
+  (`…00Z` vs `…00.500Z` vs TTN's nanoseconds). Test 15 covers it.
+- `index.html`: `selectNode()` now switches the live safety flags
+  (`soilSafeLive`, `faultLive`, spray status, sprays-today) together with
+  the node instead of showing the previous node's FAULT/gate state until
+  the next 5 s poll; mapped nodes carry `soilSafe`/`rawStatus` for this.
+- Third Codex finding (backslash static paths) was already fixed by the
+  `static_route()` rewrite in the previous commit.
+- **Verify:** `python3 backend/test_backend.py` → 15 tests OK; Chromium
+  smoke (SIM→TTN flip) still passes.
+
+### 2026-07-05 — Fix frozen-exe vendor serving (Windows 8.3 short names)
+
+- `backend/server.py`: the vendor allowlist returned a `resolve()`d path
+  and then computed `relative_to(REPO_ROOT)`. Inside a PyInstaller
+  onefile on Windows, `sys._MEIPASS` contains an 8.3 short name
+  (`RUNNER~1`), `resolve()` expands it to the long form, and
+  `relative_to` raised `ValueError` — killing the handler thread
+  mid-request ("response ended prematurely" in the exe smoke test).
+  `static_route()` now validates with resolved paths but hands the
+  original URL route to the base handler, never reconstructing a path.
+- Frozen-mode verified for real: built a Linux PyInstaller onefile and
+  smoke-tested `/api/health`, `/index.html`, both vendor files (200,
+  correct sizes) and the `/backend/server.py` block (404).
+- exe workflow smoke step now checks all four URLs and dumps captured
+  server stdout/stderr on failure.
+- **Verify:** exe check green on PR #3.
+
+### 2026-07-05 — Fix Windows static-path bug caught by the exe CI job
+
+- `backend/server.py`: static route rewriting used `str(Path)`, which on
+  Windows emits backslashes and made `/vendor/*.js` 301→404 (first real
+  Windows run of the test suite, in the exe workflow's pre-build step).
+  Now `as_posix()`. **Verify:** superseded — see the frozen-exe fix above.
+
+### 2026-07-05 — CI workflows: tests, Pages deploy, Windows exe, Android APK
+
+- `.github/workflows/tests.yml`: backend (14), decoder, Eq. 2 (14 +
+  scenario invariants) suites plus a py_compile sweep on every push/PR.
+- `.github/workflows/pages.yml`: publishes the dashboard (allowlisted
+  files only) to GitHub Pages on pushes to main. **One-time setup
+  required: repo Settings → Pages → Source = "GitHub Actions".** Pages
+  has no backend, so it serves the LIVE·SIM demo.
+- `.github/workflows/windows-exe.yml`: PyInstaller onefile build of
+  `backend/server.py` with the dashboard bundled (`server.py` gained
+  frozen-mode handling: static files from the bundle, DB next to the
+  .exe). CI smoke-tests the built exe (health + page + vendor JS over
+  HTTP) before uploading the artifact; attaches to Releases on `v*` tags.
+- `.github/workflows/android-apk.yml`: generates a Capacitor 7 WebView
+  shell around the dashboard and builds a debug-signed, sideload-ready
+  APK; artifact on every run, Release asset on `v*` tags.
+- **Verify:** YAML parsed clean locally; the exe and APK jobs run on this
+  PR (pull_request triggers) — check the Actions tab for green runs. The
+  Pages job needs the one-time settings switch before its first deploy.
+- **Next:** none — watch the PR checks.
+
+### 2026-07-05 — Post-merge fixes from the PR #2 code review (13 findings)
+
+- **backend/server.py**: static serving now uses a strict allowlist
+  (`index.html`, `support.js`, `Ring.dc.html`, `vendor/*.js`) — the repo
+  tree, including the SQLite DB and firmware sources, is no longer
+  downloadable from a public host (was P1). Partial `decoded_payload`
+  from a TTN formatter falls back to raw decoding instead of crashing on
+  NOT NULL columns; `?n=` limits are clamped to ≥1; "latest" state is
+  ordered by `received_at` (id tie-break) so a TTN redelivery of an old
+  frame can't regress the dashboard. Also: PyInstaller-frozen mode
+  support (bundle dir for static files, DB next to the .exe).
+- **ml/evaluate.py**: INT8 input quantization no longer divides by 255 —
+  the converter calibrates on 0–255 pixels, so the correct mapping is
+  `pixel/scale + zp` (was P1: reported INT8 metrics were of a washed-out
+  input distribution).
+- **analysis/**: paired TOST drops rows with a missing value in either
+  column (pairing preserved); impact window uses the full log span, not
+  first-spray→last-spray; battery night window applies a `--tz-offset`
+  (default UTC+8 Davao) before selecting solar-free hours.
+- **index.html**: polling starts on an empty backend and flips to live on
+  the first uplink (no reload needed); display IDs are assigned per
+  device_id first-seen and never reshuffled; the soil gate shows the
+  firmware's own `soil_safe` band decision instead of re-deriving it
+  one-sided; sensor faults render as a distinct red FAULT state instead
+  of masquerading as a wet-soil HELD.
+- **Verify:** `python3 backend/test_backend.py` → 14 tests OK (4 new
+  ones cover the backend fixes); headless-Chromium check confirms
+  SIM→TTN flip after the first uplink on a fresh DB.
+
 ### 2026-07-05 — Statistical analysis (`analysis/`)
 
 - `figstyle.py`: shared manuscript matplotlib defaults (serif, 3.5″

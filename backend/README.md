@@ -20,7 +20,7 @@ open http://localhost:8000                # dashboard, now on live data
 | `GET /api/state?node=ID` | latest state for one node |
 | `GET /api/history?node=ID&n=64` | recent uplinks, oldest first (sparklines) |
 | `GET /api/logs?node=ID&n=50` | uplinks rendered as event-log entries |
-| anything else | static files from the repo root (the dashboard) |
+| anything else | dashboard static files only (allowlist: `index.html`, `support.js`, `Ring.dc.html`, `vendor/*.js`) — the DB, firmware and other repo files are never reachable over HTTP |
 
 Derived `status` mirrors the dashboard vocabulary: `fault` > `spraying` >
 `blocked` > `watch` (N̂_pest > EIL) > `clear`.

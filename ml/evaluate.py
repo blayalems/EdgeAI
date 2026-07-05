@@ -57,9 +57,14 @@ def predict_tflite(model_path: Path, imgs: np.ndarray) -> np.ndarray:
     for img in imgs:
         x = img
         if inp["dtype"] == np.int8:
-            # uint8 pixel -> int8 domain, same mapping as inference.cc
+            # The converter calibrated the input on the SAME 0-255 pixel
+            # values the rep dataset feeds (quantize_int8.py), so quantize
+            # the raw pixel domain: q = pixel/scale + zp. With the usual
+            # scale≈1, zp≈-128 this is exactly what inference.cc does
+            # (uint8 - 128); dividing by 255 here would crush every image
+            # to the bottom of the int8 range and corrupt the evaluation.
             scale, zp = inp["quantization"]
-            x = np.clip(np.round(img / 255.0 / scale + zp), -128, 127
+            x = np.clip(np.round(img / scale + zp), -128, 127
                         ).astype(np.int8)
         interp.set_tensor(inp["index"], x[None, ...])
         interp.invoke()

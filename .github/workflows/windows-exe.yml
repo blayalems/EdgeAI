@@ -1,0 +1,83 @@
+# Packages backend/server.py + the dashboard into a single BananaGuard.exe
+# (PyInstaller onefile). Double-click on any Windows laptop -> local
+# dashboard + TTN webhook listener on port 8000; the SQLite DB is created
+# next to the .exe. Artifact on every run; attached to the GitHub Release
+# on v* tags.
+name: Build Windows exe
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - backend/**
+      - index.html
+      - support.js
+      - Ring.dc.html
+      - vendor/**
+      - .github/workflows/windows-exe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write # release upload on tags
+
+jobs:
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run backend tests first
+        run: python backend/test_backend.py
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build single-file exe (server + dashboard bundled)
+        run: >
+          pyinstaller --onefile --name BananaGuard
+          --add-data "index.html;."
+          --add-data "support.js;."
+          --add-data "Ring.dc.html;."
+          --add-data "vendor;vendor"
+          backend/server.py
+
+      - name: Smoke test the exe
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist/BananaGuard.exe `
+            -ArgumentList '--port','8123','--db','smoke.db' -PassThru `
+            -RedirectStandardOutput server.out.log -RedirectStandardError server.err.log
+          Start-Sleep -Seconds 8
+          $failed = $false
+          try {
+            foreach ($u in '/api/health','/index.html','/vendor/react.production.min.js','/vendor/react-dom.production.min.js') {
+              $r = Invoke-WebRequest "http://localhost:8123$u" -UseBasicParsing
+              Write-Host "$u -> $($r.StatusCode) ($($r.RawContentLength) bytes)"
+              if ($r.StatusCode -ne 200) { $failed = $true }
+            }
+          } catch {
+            Write-Host "request failed: $_"
+            $failed = $true
+          } finally {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          }
+          Write-Host "--- server stdout ---"; Get-Content server.out.log -ErrorAction SilentlyContinue
+          Write-Host "--- server stderr ---"; Get-Content server.err.log -ErrorAction SilentlyContinue
+          if ($failed) { Write-Error "smoke test failed"; exit 1 }
+          Write-Host "exe serves API + dashboard OK"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BananaGuard-windows
+          path: dist/BananaGuard.exe
+
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/BananaGuard.exe

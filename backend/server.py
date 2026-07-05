@@ -31,6 +31,7 @@ import binascii
 import json
 import os
 import sqlite3
+import sys
 import threading
 import time
 from datetime import datetime, timezone
@@ -40,7 +41,14 @@ from urllib.parse import parse_qs, urlparse
 
 from decode_payload import PayloadError, decode_uplink
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+if getattr(sys, "frozen", False):
+    # PyInstaller bundle: static files are unpacked to _MEIPASS; the DB
+    # must live next to the .exe, not in the throwaway unpack dir.
+    REPO_ROOT = Path(getattr(sys, "_MEIPASS"))
+    DEFAULT_DB = Path(sys.executable).parent / "bananaguard.db"
+else:
+    REPO_ROOT = Path(__file__).resolve().parents[1]
+    DEFAULT_DB = Path(__file__).parent / "bananaguard.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS uplinks (
@@ -79,7 +87,21 @@ def open_db(path: str) -> sqlite3.Connection:
 
 
 def utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")
+
+
+def norm_time(ts) -> str:
+    """Normalize any RFC3339 timestamp to UTC with fixed microsecond
+    precision so lexicographic order in SQLite equals chronological
+    order ('...00Z' would otherwise sort AFTER '...00.500Z'). Falls back
+    to now() on missing/unparseable input."""
+    try:
+        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return utcnow()
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).isoformat(timespec="microseconds")
 
 
 # Single Li-ion cell: 3.30 V empty (BG_BATT_CRITICAL_MV) … 4.20 V full.
@@ -92,11 +114,17 @@ def extract_uplink(msg: dict) -> dict:
     up = msg.get("uplink_message") or {}
     dev = (msg.get("end_device_ids") or {}).get("device_id") or "unknown"
 
+    # A formatter-produced decoded_payload is only trusted when complete —
+    # a partial one (missing NOT NULL fields) falls back to raw decoding.
+    required = ("n_pest", "soil_safe", "soil_fault", "camera_fault",
+                "infer_ready", "lockout_active", "batt_mv", "action",
+                "sprays_today")
     decoded = up.get("decoded_payload")
-    if not decoded or "n_pest" not in decoded:
+    if not decoded or any(decoded.get(k) is None for k in required):
         frm = up.get("frm_payload")
         if not frm:
-            raise PayloadError("no decoded_payload and no frm_payload")
+            raise PayloadError("no complete decoded_payload and no "
+                               "frm_payload")
         try:
             raw = base64.b64decode(frm, validate=True)
         except (binascii.Error, ValueError) as e:
@@ -112,7 +140,7 @@ def extract_uplink(msg: dict) -> dict:
         except (binascii.Error, ValueError):
             pass
     return {
-        "received_at": up.get("received_at") or utcnow(),
+        "received_at": norm_time(up.get("received_at")),
         "device_id": dev,
         "fport": up.get("f_port"),
         "fcnt": up.get("f_cnt"),
@@ -191,6 +219,28 @@ def row_to_log(r: sqlite3.Row) -> dict:
     }
 
 
+# Static allowlist: ONLY the dashboard files, never the repo tree (which
+# would expose the SQLite DB, firmware sources and keys on a public host).
+STATIC_FILES = {"/": "index.html", "/index.html": "index.html",
+                "/support.js": "support.js", "/Ring.dc.html": "Ring.dc.html"}
+
+
+def static_route(route: str):
+    """Return the rewritten URL path for an allowed static route, else
+    None. Works on URL paths only — never reconstructs a path from a
+    resolved filesystem path, because on Windows resolve() can expand
+    8.3 short names (e.g. inside the PyInstaller temp dir) into a form
+    that no longer matches REPO_ROOT."""
+    if route in STATIC_FILES:
+        return "/" + STATIC_FILES[route]
+    if route.startswith("/vendor/"):
+        p = (REPO_ROOT / route.lstrip("/")).resolve()
+        vendor = (REPO_ROOT / "vendor").resolve()
+        if p.is_file() and p.suffix == ".js" and vendor in p.parents:
+            return route
+    return None
+
+
 def make_handler(conn: sqlite3.Connection, token: str | None):
 
     class Handler(SimpleHTTPRequestHandler):
@@ -238,12 +288,24 @@ def make_handler(conn: sqlite3.Connection, token: str | None):
                                      ).fetchone()["c"]
                 return self._json({"ok": True, "uplinks": n})
 
+            def limit(key, default, cap):
+                try:
+                    return max(1, min(int(q.get(key, default)), cap))
+                except ValueError:
+                    return default
+
+            # "Latest" is by uplink time (then id as tie-break), not by
+            # insertion order — a TTN redelivery of an old frame must not
+            # regress the dashboard to stale telemetry.
             if route == "/api/nodes":
                 with _db_lock:
                     rows = conn.execute(
-                        "SELECT * FROM uplinks WHERE id IN (SELECT MAX(id) "
-                        "FROM uplinks GROUP BY device_id) ORDER BY device_id"
-                    ).fetchall()
+                        "SELECT u.* FROM uplinks u JOIN (SELECT device_id, "
+                        "MAX(received_at || printf('#%012d', id)) mk "
+                        "FROM uplinks GROUP BY device_id) t ON "
+                        "u.device_id = t.device_id AND "
+                        "u.received_at || printf('#%012d', u.id) = t.mk "
+                        "ORDER BY u.device_id").fetchall()
                 return self._json([row_to_state(r) for r in rows])
 
             if route == "/api/state":
@@ -251,33 +313,40 @@ def make_handler(conn: sqlite3.Connection, token: str | None):
                 with _db_lock:
                     r = conn.execute(
                         "SELECT * FROM uplinks WHERE (?1 IS NULL OR "
-                        "device_id = ?1) ORDER BY id DESC LIMIT 1", (node,)
-                    ).fetchone()
+                        "device_id = ?1) ORDER BY received_at DESC, id DESC "
+                        "LIMIT 1", (node,)).fetchone()
                 if not r:
                     return self._json({"error": "no data yet"}, 404)
                 return self._json(row_to_state(r))
 
             if route == "/api/history":
-                node, n = q.get("node"), min(int(q.get("n", 64)), 1000)
+                node, n = q.get("node"), limit("n", 64, 1000)
                 with _db_lock:
                     rows = conn.execute(
                         "SELECT * FROM (SELECT * FROM uplinks WHERE "
-                        "(?1 IS NULL OR device_id = ?1) ORDER BY id DESC "
-                        "LIMIT ?2) ORDER BY id ASC", (node, n)).fetchall()
+                        "(?1 IS NULL OR device_id = ?1) ORDER BY "
+                        "received_at DESC, id DESC LIMIT ?2) "
+                        "ORDER BY received_at ASC, id ASC",
+                        (node, n)).fetchall()
                 return self._json([row_to_state(r) for r in rows])
 
             if route == "/api/logs":
-                node, n = q.get("node"), min(int(q.get("n", 50)), 500)
+                node, n = q.get("node"), limit("n", 50, 500)
                 with _db_lock:
                     rows = conn.execute(
                         "SELECT * FROM uplinks WHERE (?1 IS NULL OR "
-                        "device_id = ?1) ORDER BY id DESC LIMIT ?2",
-                        (node, n)).fetchall()
+                        "device_id = ?1) ORDER BY received_at DESC, id DESC "
+                        "LIMIT ?2", (node, n)).fetchall()
                 return self._json([row_to_log(r) for r in rows])
 
             if route.startswith("/api/"):
                 return self._json({"error": "unknown endpoint"}, 404)
-            return super().do_GET()   # static dashboard files
+
+            rewritten = static_route(route)
+            if rewritten is None:
+                return self._json({"error": "not found"}, 404)
+            self.path = rewritten
+            return super().do_GET()
 
     return Handler
 
@@ -285,8 +354,7 @@ def make_handler(conn: sqlite3.Connection, token: str | None):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--port", type=int, default=8000)
-    ap.add_argument("--db", default=str(Path(__file__).parent
-                                        / "bananaguard.db"))
+    ap.add_argument("--db", default=str(DEFAULT_DB))
     args = ap.parse_args()
 
     conn = open_db(args.db)
