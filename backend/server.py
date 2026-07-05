@@ -211,15 +211,19 @@ STATIC_FILES = {"/": "index.html", "/index.html": "index.html",
                 "/support.js": "support.js", "/Ring.dc.html": "Ring.dc.html"}
 
 
-def static_path(route: str):
-    """Resolve an allowed static route to a real file path, else None."""
+def static_route(route: str):
+    """Return the rewritten URL path for an allowed static route, else
+    None. Works on URL paths only — never reconstructs a path from a
+    resolved filesystem path, because on Windows resolve() can expand
+    8.3 short names (e.g. inside the PyInstaller temp dir) into a form
+    that no longer matches REPO_ROOT."""
     if route in STATIC_FILES:
-        return REPO_ROOT / STATIC_FILES[route]
+        return "/" + STATIC_FILES[route]
     if route.startswith("/vendor/"):
         p = (REPO_ROOT / route.lstrip("/")).resolve()
         vendor = (REPO_ROOT / "vendor").resolve()
         if p.is_file() and p.suffix == ".js" and vendor in p.parents:
-            return p
+            return route
     return None
 
 
@@ -324,12 +328,10 @@ def make_handler(conn: sqlite3.Connection, token: str | None):
             if route.startswith("/api/"):
                 return self._json({"error": "unknown endpoint"}, 404)
 
-            target = static_path(route)
-            if target is None:
+            rewritten = static_route(route)
+            if rewritten is None:
                 return self._json({"error": "not found"}, 404)
-            # as_posix(): on Windows str(Path) yields backslashes, which
-            # SimpleHTTPRequestHandler mis-parses into a 301/404 loop.
-            self.path = "/" + target.relative_to(REPO_ROOT).as_posix()
+            self.path = rewritten
             return super().do_GET()
 
     return Handler

@@ -32,12 +32,29 @@ how to verify it, what is still open.
 
 ## Log
 
+### 2026-07-05 — Fix frozen-exe vendor serving (Windows 8.3 short names)
+
+- `backend/server.py`: the vendor allowlist returned a `resolve()`d path
+  and then computed `relative_to(REPO_ROOT)`. Inside a PyInstaller
+  onefile on Windows, `sys._MEIPASS` contains an 8.3 short name
+  (`RUNNER~1`), `resolve()` expands it to the long form, and
+  `relative_to` raised `ValueError` — killing the handler thread
+  mid-request ("response ended prematurely" in the exe smoke test).
+  `static_route()` now validates with resolved paths but hands the
+  original URL route to the base handler, never reconstructing a path.
+- Frozen-mode verified for real: built a Linux PyInstaller onefile and
+  smoke-tested `/api/health`, `/index.html`, both vendor files (200,
+  correct sizes) and the `/backend/server.py` block (404).
+- exe workflow smoke step now checks all four URLs and dumps captured
+  server stdout/stderr on failure.
+- **Verify:** exe check green on PR #3.
+
 ### 2026-07-05 — Fix Windows static-path bug caught by the exe CI job
 
 - `backend/server.py`: static route rewriting used `str(Path)`, which on
   Windows emits backslashes and made `/vendor/*.js` 301→404 (first real
   Windows run of the test suite, in the exe workflow's pre-build step).
-  Now `as_posix()`. **Verify:** exe check green on PR #3.
+  Now `as_posix()`. **Verify:** superseded — see the frozen-exe fix above.
 
 ### 2026-07-05 — CI workflows: tests, Pages deploy, Windows exe, Android APK
 
