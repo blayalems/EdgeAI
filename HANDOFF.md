@@ -13,7 +13,7 @@ how to verify it, what is still open.
 | TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
 | Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 10/10 integration tests pass; simulator exercises the full webhook→DB→API chain; Apps Script needs a live deploy to verify |
 | Test & validation (`test/`) | ✅ tested | 14/14 Eq. 2 unit tests + scenario invariants pass on host; servo rig needs bench bring-up with a real servo |
-| Statistical analysis (`analysis/`) | ⬜ pending | |
+| Statistical analysis (`analysis/`) | ✅ tested | All five scripts exercised on synthetic data (known outliers caught, TOST detects planted equivalence, battery fit recovers the planted −9 mV/h drain) |
 
 ## Open risks (carry-over from planning)
 
@@ -31,6 +31,31 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+### 2026-07-05 — Statistical analysis (`analysis/`)
+
+- `figstyle.py`: shared manuscript matplotlib defaults (serif, 3.5″
+  single-column, 300 dpi, headless Agg).
+- `mad_filter.py`: 3×MAD robust outlier rule (`mad_mask()` + CSV CLI),
+  with a degenerate-MAD fallback.
+- `tost.py`: TOST equivalence (Welch independent + paired) implemented
+  directly on scipy — p_TOST, 90 % CI, plain-English verdict.
+- `detection_metrics.py`: presence/absence confusion matrix, P/R/F1
+  (+ optional LaTeX table), count-agreement MAE, two figures; consumes
+  the ground-truth CSV from `test/ground_truth_logger.py`.
+- `battery_autonomy.py`: 3×MAD-cleans batt_mv from the backend DB or a
+  CSV, fits each solar-free night separately, averages the slopes →
+  mV/h, estimated draw, zero-solar autonomy, PASS/FAIL vs the ≥7-day
+  requirement, shaded trace figure.
+- `impact.py`: targeted sprays vs calendar baseline → liters avoided,
+  % pesticide cut, kg CO₂e saved; every assumption is a documented CLI
+  flag; comparison figure.
+- **Verify:** all scripts run against synthetic data with known ground
+  truth — the MAD filter dropped exactly the planted outliers, TOST
+  declared the planted-equivalent samples equivalent (p=0.0018), and the
+  per-night battery fit recovered the planted −9 mV/h drain.
+- **Next:** push branch, open PR. Post-merge follow-ups tracked under
+  "Open risks" and per-folder READMEs.
 
 ### 2026-07-05 — Test & validation code (`test/`)
 

@@ -1,0 +1,6 @@
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+matplotlib>=3.8
+# tost.py implements TOST on scipy directly; statsmodels/pingouin are
+# optional cross-checks, not dependencies.

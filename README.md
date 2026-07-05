@@ -15,10 +15,17 @@ through The Things Network, and feed a web dashboard plus cloud log.
 | `backend/` | Zero-dependency Python listener: TTN webhook → SQLite → dashboard JSON API + static serving, plus a no-hardware uplink simulator | — |
 | `cloud/` | Lowest-code cloud log: TTN webhook → Google Sheets Apps Script (Grafana notes included) | — |
 | `test/` | Servo specimen rig (Arduino), host-side decision-engine mirror + Eq. 2 unit tests & scenario sim, Phase-1 ground-truth logger | Weeks 13–15 |
+| `analysis/` | 3×MAD filter, TOST equivalence, confusion/F1 tables, battery autonomy, pesticide/CO₂ impact — manuscript-format figures | Member 3, Weeks 16 & 28 |
 | `index.html`, `support.js`, `Ring.dc.html`, `vendor/` | Web dashboard (single-page, no build step; React vendored for offline use). Auto-detects the backend: shows `LIVE · TTN` on real uplinks, `LIVE · SIM` standalone | — |
 
-`analysis/` lands in a subsequent commit — see `HANDOFF.md` for live
-status.
+## Data flow
+
+```
+node firmware ──9-byte uplink──▶ TTN ──webhook──▶ backend/server.py ──▶ SQLite
+     ▲                            │                     │                  │
+ ml/ export_c_array.py            └──▶ cloud/ Sheets    ├──▶ dashboard     └──▶ analysis/
+     (trained INT8 model)              (Apps Script)    └──▶ /api/*  (live data)
+```
 
 ## Tests
 
