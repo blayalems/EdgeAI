@@ -6,7 +6,7 @@
  * so no caller bug can over-spray):
  *   - at most BG_MAX_SPRAYS_PER_DAY actuations per calendar day,
  *   - at least BG_SPRAY_MIN_GAP_MIN minutes between actuations,
- *   - refuse if a sensor fault flag is passed in,
+ *   - independently re-check sensor fault, Soil_safe and battery gates,
  *   - relay is actively driven to OFF at init and after every pulse,
  *     and defaults OFF through deep sleep (gpio hold).
  */
@@ -18,9 +18,9 @@
 
 esp_err_t actuation_init(void);
 
-/** Timed solenoid pulse (BG_SPRAY_PULSE_MS). Re-checks the lockout
- *  internally; returns ESP_ERR_INVALID_STATE if refused. */
-esp_err_t actuation_spray(bool sensor_fault);
+/** Timed solenoid pulse (BG_SPRAY_PULSE_MS). Re-checks every physical
+ *  inhibitor internally; returns ESP_ERR_INVALID_STATE if refused. */
+esp_err_t actuation_spray(bool sensor_fault, bool soil_safe, uint16_t batt_mv);
 
 /** Lockout state for the decision engine / telemetry. */
 uint8_t  actuation_sprays_today(void);

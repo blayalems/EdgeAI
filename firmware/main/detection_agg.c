@@ -3,6 +3,7 @@
  * @brief RTC-memory rolling detection counter. See header for the spec.
  */
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 
@@ -14,14 +15,16 @@
 
 static const char *TAG = "agg";
 
-#define AGG_MAGIC 0xA6600B57u
+#define AGG_MAGIC 0xA6600B58u
 
 typedef struct {
     uint32_t magic;
     uint32_t wake_count;
     struct {
-        uint32_t bucket_idx;   /* unix_seconds / BG_AGG_BUCKET_SEC; 0 = empty */
+        uint32_t bucket_idx;   /* unix_seconds / BG_AGG_BUCKET_SEC */
         uint16_t count;
+        uint8_t valid;         /* explicit: bucket index zero is a real bucket */
+        uint8_t reserved;
     } bucket[BG_AGG_BUCKET_COUNT];
     uint32_t crc;              /* CRC32 over everything above */
 } agg_state_t;
@@ -37,21 +40,30 @@ static void seal(void) { s_agg.crc = calc_crc(&s_agg); }
 
 static uint32_t now_bucket(void)
 {
-    return (uint32_t)(time(NULL) / BG_AGG_BUCKET_SEC);
+    time_t now = time(NULL);
+    if (now < 0) now = 0;
+    return (uint32_t)(now / BG_AGG_BUCKET_SEC);
 }
 
-static void expire_old(void)
+static bool expire_old(void)
 {
+    bool changed = false;
     uint32_t nb = now_bucket();
     uint32_t oldest_valid = (nb >= BG_AGG_BUCKET_COUNT - 1)
                           ? nb - (BG_AGG_BUCKET_COUNT - 1) : 0;
     for (int i = 0; i < BG_AGG_BUCKET_COUNT; i++) {
-        if (s_agg.bucket[i].bucket_idx &&
-            s_agg.bucket[i].bucket_idx < oldest_valid) {
+        /* A future bucket means the clock moved backwards or reset. Keeping
+         * it could pin stale detections indefinitely, so fail safe to empty. */
+        if (s_agg.bucket[i].valid &&
+            (s_agg.bucket[i].bucket_idx < oldest_valid ||
+             s_agg.bucket[i].bucket_idx > nb)) {
             s_agg.bucket[i].bucket_idx = 0;
             s_agg.bucket[i].count = 0;
+            s_agg.bucket[i].valid = 0;
+            changed = true;
         }
     }
+    return changed;
 }
 
 void agg_init(void)
@@ -71,23 +83,36 @@ void agg_init(void)
 
 void agg_add_detections(uint16_t n)
 {
-    if (!n) return;
     uint32_t nb = now_bucket();
     expire_old();
 
+    /* Expiry is required even on a zero-detection wake. Otherwise old counts
+     * can survive indefinitely and trigger a spray outside the 30-min window. */
+    if (!n) {
+        seal();
+        return;
+    }
+
     /* Find current bucket, else reuse an empty slot, else evict the oldest. */
-    int slot = -1, oldest = 0;
+    int slot = -1, empty = -1, oldest = -1;
     for (int i = 0; i < BG_AGG_BUCKET_COUNT; i++) {
-        if (s_agg.bucket[i].bucket_idx == nb) { slot = i; break; }
-        if (s_agg.bucket[i].bucket_idx == 0 && slot < 0) slot = i;
-        if (s_agg.bucket[i].bucket_idx < s_agg.bucket[oldest].bucket_idx)
+        if (s_agg.bucket[i].valid && s_agg.bucket[i].bucket_idx == nb) {
+            slot = i;
+            break;
+        }
+        if (!s_agg.bucket[i].valid && empty < 0) empty = i;
+        if (s_agg.bucket[i].valid &&
+            (oldest < 0 ||
+             s_agg.bucket[i].bucket_idx < s_agg.bucket[oldest].bucket_idx)) {
             oldest = i;
+        }
     }
     if (slot < 0) {
-        slot = oldest;
+        slot = (empty >= 0) ? empty : oldest;
         s_agg.bucket[slot].count = 0;
     }
     s_agg.bucket[slot].bucket_idx = nb;
+    s_agg.bucket[slot].valid = 1;
     uint32_t sum = s_agg.bucket[slot].count + n;
     s_agg.bucket[slot].count = sum > UINT16_MAX ? UINT16_MAX : (uint16_t)sum;
     seal();
@@ -95,9 +120,10 @@ void agg_add_detections(uint16_t n)
 
 uint16_t agg_window_count(void)
 {
+    if (expire_old()) seal();
     uint32_t total = 0;
     for (int i = 0; i < BG_AGG_BUCKET_COUNT; i++) {
-        total += s_agg.bucket[i].count;
+        if (s_agg.bucket[i].valid) total += s_agg.bucket[i].count;
     }
     return total > UINT16_MAX ? UINT16_MAX : (uint16_t)total;
 }

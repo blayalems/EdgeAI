@@ -10,6 +10,17 @@
 #pragma once
 
 #include <stdint.h>
+#include "sdkconfig.h"
+
+/* This pin map and peripheral allocation are for the classic ESP32
+ * DevKit/WROOM-32 only.  The manuscript currently names an ESP32-C6, whose
+ * GPIO/ADC/SPI routing is different (GPIO33-35 do not exist, for example).
+ * Fail at compile time instead of silently building unsafe pin assignments
+ * for a different target.  A C6 port must supply a reviewed board pin map
+ * before this guard is widened. */
+#if !defined(CONFIG_IDF_TARGET_ESP32)
+#error "BananaGuard pin map supports ESP32 DevKit/WROOM-32 only; add a reviewed board-specific map before targeting ESP32-C6"
+#endif
 
 /* ------------------------------------------------------------------ */
 /* Identity / versioning                                               */
@@ -62,6 +73,8 @@
 #define BG_DIFF_THUMB_H            48
 #define BG_DIFF_PIXEL_THRESHOLD    28   /* |cur-ref| (0..255) for a pixel to count as "moving" */
 #define BG_DIFF_MIN_ACTIVE_PIXELS  20   /* fewer than this in thumbnail -> no motion, skip inference */
+#define BG_DIFF_MIN_COMPONENT_PIXELS 4 /* reject tiny disconnected noise blobs */
+#define BG_DIFF_MAX_ROIS           12   /* bench protocol's largest density; must exceed BG_N_EIL */
 #define BG_DIFF_ROI_PAD_PCT        15   /* pad bounding box by % of its size before cropping */
 #define BG_DIFF_REF_ALPHA_NUM      1    /* ref = ref + (cur-ref) * NUM/DEN  (slow background update) */
 #define BG_DIFF_REF_ALPHA_DEN      8
@@ -73,8 +86,11 @@
 #define BG_MODEL_INPUT_H           96
 #define BG_MODEL_INPUT_C           3
 #define BG_TFLM_ARENA_KB           300  /* tensor arena; heap (PSRAM preferred) */
+#define BG_MODEL_CLASS_COUNT       4    /* negative + three manuscript target species */
 #define BG_CLASS_NEGATIVE          0    /* background / not-a-pest class index */
-#define BG_CLASS_PEST              1    /* banana weevil class index */
+#define BG_CLASS_THRIPS            1
+#define BG_CLASS_SKIPPER           2
+#define BG_CLASS_APHID             3
 #define BG_CONF_THRESHOLD_PCT      60   /* detections below this confidence are rejected */
 
 /* ------------------------------------------------------------------ */
@@ -98,9 +114,11 @@
 /* Plausibility limits — readings outside are a sensor fault, not data. */
 #define BG_SOIL_RAW_MIN_MV         200
 #define BG_SOIL_RAW_MAX_MV         3100
-/* Soil_safe band: spraying allowed only when VWC is inside this range
- * (too dry -> chemical stress; saturated -> runoff). */
-#define BG_SOIL_SAFE_MIN_PCT       20.0f
+/* The current manuscript defines Soil_safe as the saturation/runoff gate:
+ * every plausible reading up to the calibrated saturation boundary is safe.
+ * Raise the minimum only after a separate dry-soil inhibitor is specified and
+ * validated in the actuation protocol. */
+#define BG_SOIL_SAFE_MIN_PCT       0.0f
 #define BG_SOIL_SAFE_MAX_PCT       60.0f
 
 /* ------------------------------------------------------------------ */
@@ -119,12 +137,15 @@
 /* ------------------------------------------------------------------ */
 /* LoRaWAN telemetry                                                   */
 /* ------------------------------------------------------------------ */
+/* Prototype radio plan only. Philippine 915-928 MHz operation is not proof
+ * that a US915 channel plan is correct for the selected gateway/operator.
+ * Confirm the deployed network's plan and local authorization, then set the
+ * verification switch; real RF initialization is blocked while it is zero. */
 #define BG_LORA_REGION_US915       1
-#define BG_LORA_SUBBAND            2    /* TTN US915 uses sub-band 2 (channels 8-15) */
+#define BG_LORA_SUBBAND            2    /* only if the confirmed network is TTN US915 */
+#define BG_LORA_PLAN_VERIFIED      0    /* set to 1 only after gateway + local plan are confirmed */
 #define BG_LORA_SF                 10   /* SF10 / 125 kHz per link-budget analysis */
 #define BG_LORA_FPORT              1
-#define BG_LORA_JOIN_TIMEOUT_S     30
-#define BG_LORA_TX_TIMEOUT_S       15
 /* OTAA credentials — provisioned per node; placeholders MUST be replaced.
  * (Keys in a header is acceptable for the prototype; production would use NVS.) */
 #define BG_LORA_DEV_EUI            "0000000000000000"

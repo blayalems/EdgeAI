@@ -24,3 +24,9 @@ idf_component_register(
     PRIV_REQUIRES
         esp_system
 )
+
+# The radio component is intentionally optional for bench builds. If the
+# documented firmware/components/ttn-esp32 checkout exists, expose its header
+# and link it so lora_telemetry.c selects the real implementation instead of
+# silently remaining on the logging stub.
+idf_component_optional_requires(PRIVATE ttn-esp32)

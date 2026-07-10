@@ -5,7 +5,7 @@
  * C API over the C++ runtime (inference.cc). The model is linked in as a
  * C array (model_data.cc, generated with `xxd -i` from the quantized
  * .tflite). Returns class + confidence; the negative/background class is
- * rejected here so callers only ever see pest detections.
+ * rejected and every other manuscript target class qualifies as a pest.
  */
 #pragma once
 
@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 typedef struct {
-    bool    pest;            /* true only if class==BG_CLASS_PEST and confidence passed */
+    bool    pest;            /* true for any non-negative class above confidence threshold */
     uint8_t class_id;        /* argmax class index */
     uint8_t confidence_pct;  /* softmax confidence of argmax, 0..100 */
 } bg_inference_result_t;

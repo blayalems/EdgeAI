@@ -31,21 +31,23 @@ esp_err_t power_init(void)
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_ENABLE,
     };
-    gpio_config(&io);
+    esp_err_t err = gpio_config(&io);
+    if (err != ESP_OK) return err;
     s_cycle_min = gpio_get_level(BG_PIN_DUTY_SELECT) ? BG_SLEEP_MIN_DEFAULT
                                                      : BG_SLEEP_MIN_ALT;
 
     /* power_mgr owns ADC1; soil_sensor borrows the handle via
      * power_adc_unit(), so power_init() must run first (main.c does). */
     adc_oneshot_unit_init_cfg_t unit = { .unit_id = ADC_UNIT_1 };
-    esp_err_t err = adc_oneshot_new_unit(&unit, &s_adc);
+    err = adc_oneshot_new_unit(&unit, &s_adc);
     if (err != ESP_OK) return err;
 
     adc_oneshot_chan_cfg_t chan = {
         .bitwidth = ADC_BITWIDTH_12,
         .atten = ADC_ATTEN_DB_12,
     };
-    adc_oneshot_config_channel(s_adc, BG_ADC_CH_BATT, &chan);
+    err = adc_oneshot_config_channel(s_adc, BG_ADC_CH_BATT, &chan);
+    if (err != ESP_OK) return err;
 
     adc_cali_line_fitting_config_t cali = {
         .unit_id = ADC_UNIT_1,
@@ -58,6 +60,7 @@ esp_err_t power_init(void)
 
     /* Sample once at boot (before heavy loads switch on) for a clean OCV. */
     int64_t acc = 0;
+    int valid_samples = 0;
     for (int i = 0; i < BATT_SAMPLES; i++) {
         int raw = 0, mv = 0;
         if (adc_oneshot_read(s_adc, BG_ADC_CH_BATT, &raw) != ESP_OK) continue;
@@ -66,9 +69,15 @@ esp_err_t power_init(void)
         } else {
             acc += raw * 3300 / 4095;
         }
+        valid_samples++;
     }
-    s_batt_mv = (uint16_t)((acc / BATT_SAMPLES) * BG_BATT_DIVIDER_NUM
-                           / BG_BATT_DIVIDER_DEN);
+    if (!valid_samples) {
+        s_batt_mv = 0; /* fail safe: power_batt_critical() becomes true */
+        ESP_LOGE(TAG, "battery ADC produced no valid samples");
+    } else {
+        s_batt_mv = (uint16_t)((acc / valid_samples) * BG_BATT_DIVIDER_NUM
+                               / BG_BATT_DIVIDER_DEN);
+    }
 
     ESP_LOGI(TAG, "battery %u mV, duty cycle %lu min",
              s_batt_mv, (unsigned long)s_cycle_min);

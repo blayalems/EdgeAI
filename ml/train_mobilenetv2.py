@@ -24,6 +24,7 @@ import numpy as np
 import tensorflow as tf
 
 import bg_config as cfg
+from split_dataset import FrozenDatasetError, verify_frozen_dataset
 
 HERE = Path(__file__).parent
 
@@ -97,6 +98,14 @@ def main():
                     help="how many top base layers to unfreeze in phase 2")
     args = ap.parse_args()
 
+    if (args.epochs_head <= 0 or args.epochs_finetune <= 0 or args.batch <= 0
+            or args.lr <= 0 or args.unfreeze <= 0):
+        ap.error("epochs, batch, learning rate, and --unfreeze must be positive")
+    try:
+        split_manifest = verify_frozen_dataset(args.data_root)
+    except FrozenDatasetError as exc:
+        raise SystemExit(f"error: {exc}") from exc
+
     tf.keras.utils.set_random_seed(cfg.SEED)
 
     train_ds, train_labels, n_classes = make_dataset(
@@ -104,6 +113,12 @@ def main():
     val_ds, _, _ = make_dataset(args.data_root, "val", args.batch, train=False)
 
     model, base = build_model(n_classes)
+    if n_classes != len(split_manifest["classes"]):
+        raise SystemExit(
+            "error: training labels do not cover every frozen manifest class"
+        )
+    if args.unfreeze > len(base.layers):
+        ap.error(f"--unfreeze cannot exceed {len(base.layers)} base layers")
     weights = class_weights(train_labels)
     print(f"{n_classes} classes, class weights: "
           + ", ".join(f"{i}:{w:.2f}" for i, w in weights.items()))
@@ -133,7 +148,8 @@ def main():
 
     history = {"head": h1.history, "finetune": h2.history,
                "n_classes": n_classes, "alpha": cfg.MNV2_ALPHA,
-               "seed": cfg.SEED}
+               "class_names": split_manifest["classes"], "seed": cfg.SEED,
+               "split_algorithm": split_manifest["algorithm"]}
     (HERE / cfg.RUNS_DIR / "history.json").write_text(
         json.dumps(history, indent=1, default=float))
     print(f"best model: {best_path}")

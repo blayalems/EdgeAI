@@ -26,6 +26,11 @@ def run(name, cycles):
     sprays_today, since_spray, day_cycle = 0, UINT32_MAX, 0
     rows = []
     for i, c in enumerate(cycles):
+        # A cycle interval elapses BEFORE the next wake's decision. The old
+        # harness advanced this after evaluation, so a 30-min minimum gap was
+        # incorrectly reported as zero at the next 30-min wake.
+        if i > 0 and since_spray != UINT32_MAX:
+            since_spray += c.get("elapsed_min", CYCLE_MIN)
         day_cycle += 1
         if day_cycle > 48:            # midnight: firmware resets the day cap
             day_cycle, sprays_today = 1, 0
@@ -40,8 +45,6 @@ def run(name, cycles):
         if action is Action.SPRAY:
             sprays_today += 1
             since_spray = 0
-        elif since_spray != UINT32_MAX:
-            since_spray += CYCLE_MIN
         rows.append({"scenario": name, "cycle": i, "n_pest": c["n_pest"],
                      "soil_safe": c["soil_safe"],
                      "action": action.name, "reason": reason.value,

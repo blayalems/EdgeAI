@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Post realistic TTS v3 webhook bodies to a running backend — lets the
-whole chain (webhook → decode → SQLite → API → dashboard) be exercised
+"""Post realistic TTS v3 webhook bodies to a running backend - lets the
+whole chain (webhook -> decode -> SQLite -> API -> dashboard) be exercised
 without a single piece of hardware or a TTN account.
 
     python3 backend/server.py &
@@ -15,9 +15,11 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
 import random
 import time
 import urllib.request
+from datetime import datetime, timezone
 
 from decode_payload import encode_uplink
 
@@ -31,7 +33,9 @@ NODES = [
 def fake_state(rng: random.Random, dev: str) -> dict:
     n_pest = max(0, int(rng.gauss(3, 2.5)))
     vwc = None if rng.random() < 0.03 else int(rng.uniform(15, 75))
-    soil_safe = vwc is not None and 20 <= vwc <= 60
+    # Mirror the current manuscript/firmware contract: saturation is the
+    # environmental inhibitor; plausible readings at or below 60% are safe.
+    soil_safe = vwc is not None and vwc <= 60
     batt = int(rng.uniform(3450, 4150))
     if vwc is None:
         action = "FAULT"
@@ -48,16 +52,19 @@ def fake_state(rng: random.Random, dev: str) -> dict:
     }
 
 
-def webhook_body(dev_id: str, state: dict, fcnt: int) -> dict:
+def webhook_body(dev_id: str, state: dict, fcnt: int,
+                 rng: random.Random) -> dict:
     return {
         "end_device_ids": {"device_id": dev_id,
                            "application_ids": {"application_id": "bananaguard"}},
         "uplink_message": {
             "f_port": 1, "f_cnt": fcnt,
+            "received_at": datetime.now(timezone.utc).isoformat(),
+            "session_key_id": "sim-session",
             "frm_payload": base64.b64encode(encode_uplink(state)).decode(),
             "rx_metadata": [{"gateway_ids": {"gateway_id": "sim-gw"},
-                             "rssi": random.randint(-110, -85),
-                             "snr": round(random.uniform(3, 11), 1)}],
+                             "rssi": rng.randint(-110, -85),
+                             "snr": round(rng.uniform(3, 11), 1)}],
             "settings": {"data_rate": {"lora": {"spreading_factor": 10,
                                                 "bandwidth": 125000}}},
         },
@@ -70,6 +77,8 @@ def main():
     ap.add_argument("--interval", type=float, default=10.0)
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument("--token", default=os.environ.get("BG_WEBHOOK_TOKEN"),
+                    help="X-Webhook-Token (defaults to BG_WEBHOOK_TOKEN)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -77,10 +86,12 @@ def main():
     while True:
         fcnt += 1
         for dev_id, name in NODES:
-            body = webhook_body(dev_id, fake_state(rng, dev_id), fcnt)
+            body = webhook_body(dev_id, fake_state(rng, dev_id), fcnt, rng)
+            headers = {"Content-Type": "application/json"}
+            if args.token:
+                headers["X-Webhook-Token"] = args.token
             req = urllib.request.Request(
-                args.url, json.dumps(body).encode(),
-                {"Content-Type": "application/json"})
+                args.url, json.dumps(body).encode(), headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 out = json.loads(resp.read())
             print(f"{dev_id} ({name}): {out}")

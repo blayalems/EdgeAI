@@ -19,6 +19,9 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{background:#0a0f0c}
+button{transition:transform .18s cubic-bezier(.2,.9,.2,1),opacity .18s ease}
+button:active{transform:translateY(1px) scale(.985)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--secondary);outline-offset:3px}
 .ms{font-family:'Material Symbols Rounded';font-weight:500;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;user-select:none}
 .ms.fill{font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24}
 ::-webkit-scrollbar{width:9px;height:9px}
@@ -34,6 +37,7 @@ body{background:#0a0f0c}
 @keyframes rotate{to{transform:rotate(360deg)}}
 @keyframes glowpulse{0%,100%{opacity:.55}50%{opacity:1}}
 @keyframes riseIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
 </helmet>
 <div style="{{ rootStyle }}">
@@ -45,7 +49,7 @@ body{background:#0a0f0c}
 
   <!-- ================= SIMPLE (FARMER) VIEW ================= -->
   <sc-if value="{{ isSimple }}" hint-placeholder-val="{{ false }}">
-  <div style="position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;max-width:1100px;margin:0 auto;padding:20px;gap:20px;">
+  <div style="position:relative;z-index:2;min-height:100dvh;display:flex;flex-direction:column;max-width:1100px;margin:0 auto;padding:20px;gap:20px;">
     <div style="display:flex;align-items:center;gap:14px;">
       <div style="width:52px;height:52px;border-radius:17px;background:var(--primary);display:grid;place-items:center;box-shadow:var(--shadow);flex:0 0 auto;"><span class="ms fill" style="font-size:30px;color:var(--primary-ink);">eco</span></div>
       <div style="min-width:0;flex:1;">
@@ -63,7 +67,7 @@ body{background:#0a0f0c}
         <span class="ms fill" style="font-size:88px;color:{{ statusColor }};">{{ statusIcon }}</span>
       </div>
       <div style="position:relative;flex:1 1 300px;min-width:260px;">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="width:11px;height:11px;border-radius:50%;background:var(--bad);animation:pulse 1.4s infinite;"></span><span style="font-weight:800;font-size:14px;letter-spacing:.14em;color:var(--ink-2);">{{ tLive }}</span></div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="width:11px;height:11px;border-radius:50%;background:{{ liveDotColor }};{{ liveDotAnim }}"></span><span style="font-weight:800;font-size:14px;letter-spacing:.14em;color:var(--ink-2);">{{ tLive }}</span></div>
         <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:64px;line-height:.95;color:{{ statusColor }};letter-spacing:-.02em;">{{ tStatusWord }}</div>
         <div style="font-size:23px;font-weight:600;color:var(--ink);margin-top:14px;max-width:520px;line-height:1.32;text-wrap:pretty;">{{ tStatusPlain }}</div>
       </div>
@@ -117,11 +121,11 @@ body{background:#0a0f0c}
 
   <!-- ================= ADVANCED APP ================= -->
   <sc-if value="{{ isAdvanced }}" hint-placeholder-val="{{ true }}">
-  <div style="position:relative;z-index:2;display:flex;min-height:100vh;">
+  <div style="position:relative;z-index:2;display:flex;min-height:100dvh;">
 
     <!-- SIDE NAV -->
     <sc-if value="{{ sideNav }}" hint-placeholder-val="{{ true }}">
-    <div style="width:{{ navWidth }}px;flex:0 0 auto;position:sticky;top:0;height:100vh;padding:18px 14px;display:flex;flex-direction:column;gap:6px;background:var(--nav);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-right:1px solid var(--glass-brd);z-index:5;">
+    <div style="width:{{ navWidth }}px;flex:0 0 auto;position:sticky;top:0;height:100dvh;padding:18px 14px;display:flex;flex-direction:column;gap:6px;background:var(--nav);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-right:1px solid var(--glass-brd);z-index:5;">
       <div style="display:flex;align-items:center;gap:11px;padding:8px 8px 16px;">
         <div style="width:42px;height:42px;border-radius:14px;background:var(--primary);display:grid;place-items:center;flex:0 0 auto;box-shadow:0 6px 16px var(--accent-glow);"><span class="ms fill" style="font-size:26px;color:var(--primary-ink);">eco</span></div>
         <sc-if value="{{ navLabels }}" hint-placeholder-val="{{ true }}"><div style="min-width:0;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:var(--ink);line-height:1;">BananaGuard</div><div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-top:3px;letter-spacing:.02em;">Edge-AI Pest Sentinel</div></div></sc-if>
@@ -183,8 +187,13 @@ body{background:#0a0f0c}
           <sc-if value="{{ showOverview }}" hint-placeholder-val="{{ true }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
             <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
-              <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Overview</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ nodeId }} · {{ nodeName }} — {{ nodeBlock }} · updated {{ clock }}</div></div>
-              <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><span class="ms" style="font-size:18px;color:var(--secondary);">router</span><span style="font-weight:700;font-size:13px;color:var(--ink-2);">ESP32-C6 · MobileNetV2 · LoRaWAN SF{{ sf }}</span></div>
+              <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Overview</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ nodeId }} · {{ nodeName }} — {{ nodeBlock }} · {{ sampleUpdated }}</div></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><span class="ms" style="font-size:18px;color:var(--secondary);">router</span><span style="font-weight:700;font-size:13px;color:var(--ink-2);">{{ platformBadge }}</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:18px;background:{{ provenanceBg }};border:1px solid {{ provenanceColor }};margin-bottom:16px;flex-wrap:wrap;">
+              <span class="ms fill" style="font-size:22px;color:{{ provenanceColor }};">{{ provenanceIcon }}</span>
+              <div style="flex:1 1 340px;min-width:220px;"><div style="font-size:12px;font-weight:800;color:{{ provenanceColor }};letter-spacing:.06em;">{{ provenanceLabel }}</div><div style="font-size:12.5px;font-weight:600;color:var(--ink-2);margin-top:2px;line-height:1.35;">{{ provenanceDetail }}</div></div>
+              <sc-if value="{{ exportAvailable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onExport }}" style="cursor:pointer;border:none;background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 13px;font-weight:800;font-size:12px;font-family:'Manrope',sans-serif;display:flex;align-items:center;gap:6px;"><span class="ms" style="font-size:17px;">download</span>Export CSV</button></sc-if>
             </div>
 
             <!-- HERO ROW -->
@@ -197,7 +206,7 @@ body{background:#0a0f0c}
                     <span class="ms fill" style="font-size:60px;color:{{ statusColor }};">{{ statusIcon }}</span>
                   </div>
                   <div style="flex:1 1 220px;min-width:200px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="width:9px;height:9px;border-radius:50%;background:var(--bad);animation:pulse 1.4s infinite;"></span><span style="font-weight:800;font-size:12px;letter-spacing:.1em;color:var(--ink-3);">LIVE STATUS</span></div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="width:9px;height:9px;border-radius:50%;background:{{ liveDotColor }};{{ liveDotAnim }}"></span><span style="font-weight:800;font-size:12px;letter-spacing:.1em;color:var(--ink-3);">{{ provenanceLabel }}</span></div>
                     <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:44px;line-height:1;color:{{ statusColor }};letter-spacing:-.02em;">{{ statusWord }}</div>
                     <div style="font-size:16px;font-weight:600;color:var(--ink);margin-top:10px;max-width:440px;line-height:1.4;text-wrap:pretty;">{{ statusPlain }}</div>
                   </div>
@@ -222,11 +231,14 @@ body{background:#0a0f0c}
               <button onClick="{{ onGoDetections }}" style="cursor:pointer;text-align:left;border:1px solid var(--glass-brd);flex:1 1 300px;min-width:260px;position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:0;background:#0c130d;box-shadow:var(--shadow);min-height:220px;display:flex;">
                 <div style="position:absolute;inset:0;background:linear-gradient(150deg,#1c3a1e,#0f2411 55%,#08150a);"></div>
                 <div style="position:absolute;inset:0;background:radial-gradient(60% 50% at 30% 30%,rgba(120,200,110,.28),transparent 70%),radial-gradient(50% 60% at 75% 70%,rgba(80,160,90,.22),transparent 70%);"></div>
-                <div style="position:absolute;left:0;right:0;height:52px;background:linear-gradient(180deg,rgba(120,240,150,.5),transparent);filter:blur(2px);animation:scan 3.4s linear infinite;"></div>
-                <div style="position:absolute;left:16%;top:26%;width:30%;height:34%;border:2px solid var(--secondary);border-radius:10px;box-shadow:0 0 0 2px rgba(0,0,0,.25);"><span style="position:absolute;top:-22px;left:-2px;background:var(--secondary);color:#062;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;color:#04212a;">Thrips 0.93</span></div>
-                <div style="position:absolute;right:20%;bottom:24%;width:24%;height:26%;border:2px solid var(--tertiary);border-radius:10px;"><span style="position:absolute;top:-22px;left:-2px;background:var(--tertiary);color:#3a2600;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;">Aphid 0.81</span></div>
-                <div style="position:relative;align-self:flex-start;margin:14px;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span style="width:8px;height:8px;border-radius:50%;background:#ff5a5a;animation:pulse 1.4s infinite;"></span><span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.08em;">CAM · LIVE</span></div>
-                <div style="position:absolute;left:0;right:0;bottom:0;padding:14px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(0deg,rgba(0,0,0,.6),transparent);"><div><div style="color:#fff;font-weight:800;font-size:15px;">Detections</div><div style="color:rgba(255,255,255,.72);font-size:12px;font-weight:600;">{{ pestNowInt }} targets · {{ latency }} ms inference</div></div><span class="ms" style="font-size:22px;color:#fff;">arrow_forward</span></div>
+                <sc-if value="{{ showSyntheticVision }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;left:0;right:0;height:52px;background:linear-gradient(180deg,rgba(120,240,150,.5),transparent);filter:blur(2px);animation:scan 3.4s linear infinite;"></div>
+                  <div style="position:absolute;left:16%;top:26%;width:30%;height:34%;border:2px solid var(--secondary);border-radius:10px;box-shadow:0 0 0 2px rgba(0,0,0,.25);"><span style="position:absolute;top:-22px;left:-2px;background:var(--secondary);font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;color:#04212a;">Thrips · demo</span></div>
+                  <div style="position:absolute;right:20%;bottom:24%;width:24%;height:26%;border:2px solid var(--tertiary);border-radius:10px;"><span style="position:absolute;top:-22px;left:-2px;background:var(--tertiary);color:#3a2600;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;">Aphid · demo</span></div>
+                </sc-if>
+                <sc-if value="{{ showLiveNoCamera }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:56px 24px 62px;display:grid;place-items:center;text-align:center;color:rgba(255,255,255,.78);font-size:13px;font-weight:700;line-height:1.45;"><div><span class="ms" style="font-size:34px;display:block;margin-bottom:7px;">no_photography</span>No image is transported in the 9-byte LoRaWAN uplink.</div></div></sc-if>
+                <div style="position:relative;align-self:flex-start;margin:14px;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span style="width:8px;height:8px;border-radius:50%;background:{{ cameraDotColor }};{{ cameraDotAnim }}"></span><span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.08em;">{{ cameraBadge }}</span></div>
+                <div style="position:absolute;left:0;right:0;bottom:0;padding:14px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(0deg,rgba(0,0,0,.6),transparent);"><div><div style="color:#fff;font-weight:800;font-size:15px;">Detections</div><div style="color:rgba(255,255,255,.72);font-size:12px;font-weight:600;">{{ cameraDetail }}</div></div><span class="ms" style="font-size:22px;color:#fff;">arrow_forward</span></div>
               </button>
             </div>
 
@@ -243,7 +255,7 @@ body{background:#0a0f0c}
               <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;">
                 <div style="display:flex;align-items:center;gap:10px;align-self:flex-start;margin-bottom:8px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--ok-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--ok);">battery_charging_full</span></span><span style="font-weight:700;font-size:14px;color:var(--ink-2);">Battery</span></div>
                 <dc-import name="Ring" value="{{ battFrac }}" big="{{ battInt }}" unit="%" sub="Charge" color="var(--ok)" glow="var(--accent-glow)" size="132" hint-size="132px,132px"></dc-import>
-                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:8px;">≈ {{ autonomy }} days autonomy · +{{ solarIn }} W solar</div>
+                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:8px;">{{ batteryDetail }}</div>
               </div>
               <!-- soil -->
               <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;">
@@ -261,7 +273,7 @@ body{background:#0a0f0c}
                   <div style="flex:1;height:100%;border-radius:5px;background:{{ sig4 }};"></div>
                 </div>
                 <div style="display:flex;align-items:baseline;gap:6px;margin-top:12px;"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:var(--ink);">{{ rssi }}</span><span style="font-weight:700;font-size:13px;color:var(--ink-3);">dBm · {{ signalWord }}</span></div>
-                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:3px;">SNR {{ snr }} dB · SF{{ sf }} · {{ packets }} pkts</div>
+                <div style="font-size:12px;font-weight:700;color:var(--ink-2);margin-top:3px;">{{ linkDetail }}</div>
               </div>
               <!-- model -->
               <div style="border-radius:var(--radius);padding:18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
@@ -291,9 +303,9 @@ body{background:#0a0f0c}
                 <div style="flex:0 0 auto;display:flex;align-items:center;gap:14px;"><span class="ms fill" style="font-size:44px;color:var(--primary-ink);">compost</span><div><div style="font-size:13px;font-weight:800;color:var(--primary-ink);opacity:.82;letter-spacing:.06em;text-transform:uppercase;">Sustainability impact</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--primary-ink);opacity:.9;">SDG 2 · SDG 12 · this season</div></div></div>
                 <div style="flex:1;"></div>
                 <div style="display:flex;gap:30px;flex-wrap:wrap;">
-                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ pesticideCut }}%</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">Pesticide cut</div></div>
-                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ co2Saved }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">kg CO₂ saved</div></div>
-                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ litersAvoided }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">L spray avoided</div></div>
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ pesticideCutDisplay }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">Pesticide cut</div></div>
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ co2SavedDisplay }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">kg CO₂ saved</div></div>
+                  <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;color:var(--primary-ink);line-height:1;">{{ litersAvoidedDisplay }}</div><div style="font-size:13px;font-weight:700;color:var(--primary-ink);opacity:.82;margin-top:4px;">L spray avoided</div></div>
                 </div>
               </div>
             </div>
@@ -333,26 +345,29 @@ body{background:#0a0f0c}
           <!-- ================= DETECTIONS ================= -->
           <sc-if value="{{ showDetections }}" hint-placeholder-val="{{ false }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
-            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Detections</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">On-device CNN inference · {{ latency }} ms · frame #{{ detFrame }}</div></div>
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Detections</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ detectionSubtitle }}</div></div>
             <div style="display:flex;gap:16px;flex-wrap:wrap;">
               <!-- CAMERA -->
               <div style="flex:2 1 440px;min-width:300px;position:relative;overflow:hidden;border-radius:var(--radius-lg);background:#0a130b;box-shadow:var(--shadow);min-height:380px;display:flex;flex-direction:column;">
                 <div style="position:absolute;inset:0;background:linear-gradient(155deg,#1f4322,#123016 52%,#08150a);"></div>
                 <div style="position:absolute;inset:0;background:radial-gradient(50% 45% at 28% 26%,rgba(130,210,120,.30),transparent 66%),radial-gradient(45% 55% at 78% 72%,rgba(70,150,90,.24),transparent 68%),radial-gradient(40% 40% at 60% 40%,rgba(180,220,120,.16),transparent 70%);"></div>
                 <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;"></div>
-                <div style="position:absolute;left:0;right:0;height:70px;background:linear-gradient(180deg,rgba(120,240,150,.45),transparent);filter:blur(3px);animation:scan 3.6s linear infinite;"></div>
-                <!-- boxes -->
-                <div style="position:absolute;left:14%;top:22%;width:26%;height:32%;border:2px solid var(--secondary);border-radius:12px;box-shadow:0 0 18px rgba(87,224,255,.3),inset 0 0 0 1px rgba(0,0,0,.2);"><span style="position:absolute;top:-24px;left:-2px;background:var(--secondary);color:#04212a;font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap;">Thrips · {{ camConf1 }}</span><span style="position:absolute;left:-1px;top:-1px;width:12px;height:12px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:3px 0 0 0;"></span></div>
-                <div style="position:absolute;right:16%;bottom:20%;width:22%;height:26%;border:2px solid var(--tertiary);border-radius:12px;box-shadow:0 0 18px rgba(255,212,107,.28);"><span style="position:absolute;top:-24px;left:-2px;background:var(--tertiary);color:#3a2600;font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap;">Aphid · {{ camConf2 }}</span></div>
-                <div style="position:absolute;left:44%;top:52%;width:15%;height:18%;border:2px dashed rgba(255,255,255,.5);border-radius:10px;"><span style="position:absolute;top:-22px;left:-2px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;">ROI scan</span></div>
+                <sc-if value="{{ showSyntheticVision }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;left:0;right:0;height:70px;background:linear-gradient(180deg,rgba(120,240,150,.45),transparent);filter:blur(3px);animation:scan 3.6s linear infinite;"></div>
+                  <!-- illustrative boxes; no image or per-class count exists in the uplink -->
+                  <div style="position:absolute;left:14%;top:22%;width:26%;height:32%;border:2px solid var(--secondary);border-radius:12px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);"><span style="position:absolute;top:-24px;left:-2px;background:var(--secondary);color:#04212a;font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap;">Thrips · demo</span><span style="position:absolute;left:-1px;top:-1px;width:12px;height:12px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:3px 0 0 0;"></span></div>
+                  <div style="position:absolute;right:16%;bottom:20%;width:22%;height:26%;border:2px solid var(--tertiary);border-radius:12px;"><span style="position:absolute;top:-24px;left:-2px;background:var(--tertiary);color:#3a2600;font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap;">Aphid · demo</span></div>
+                  <div style="position:absolute;left:44%;top:52%;width:15%;height:18%;border:2px dashed rgba(255,255,255,.5);border-radius:10px;"><span style="position:absolute;top:-22px;left:-2px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;">ROI demo</span></div>
+                </sc-if>
+                <sc-if value="{{ showLiveNoCamera }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:70px 30px 90px;display:grid;place-items:center;text-align:center;color:rgba(255,255,255,.78);font-size:14px;font-weight:700;line-height:1.5;"><div><span class="ms" style="font-size:42px;display:block;margin-bottom:9px;">no_photography</span>Live image and per-class detections are not part of the current telemetry payload.<br><span style="font-size:12px;color:rgba(255,255,255,.55);">Use reference captures below for manual validation evidence.</span></div></div></sc-if>
                 <!-- HUD -->
                 <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:14px;">
-                  <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span style="width:8px;height:8px;border-radius:50%;background:#ff5a5a;animation:pulse 1.4s infinite;"></span><span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.09em;">CAM 01 · LIVE</span></div>
-                  <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span class="ms" style="font-size:16px;color:#9be6a8;">memory</span><span style="font-size:11px;font-weight:700;color:#fff;">MobileNetV2</span></div>
+                  <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span style="width:8px;height:8px;border-radius:50%;background:{{ cameraDotColor }};{{ cameraDotAnim }}"></span><span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:.09em;">{{ cameraBadge }}</span></div>
+                  <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);"><span class="ms" style="font-size:16px;color:#9be6a8;">memory</span><span style="font-size:11px;font-weight:700;color:#fff;">{{ inferenceBadge }}</span></div>
                 </div>
                 <div style="flex:1;"></div>
                 <div style="position:relative;margin:14px;padding:14px 16px;border-radius:18px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-                  <div><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;">Targets in frame</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#fff;">{{ pestNowInt }}</div></div>
+                  <div><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;">Targets in frame</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#fff;">{{ pestNowDisplay }}</div></div>
                   <div style="width:1px;height:34px;background:rgba(255,255,255,.2);"></div>
                   <div><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;">30-min window</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#fff;">{{ pestWindow }} <span style="font-size:13px;color:rgba(255,255,255,.6);">/ {{ eilInt }} EIL</span></div></div>
                   <div style="flex:1;"></div>
@@ -366,9 +381,9 @@ body{background:#0a0f0c}
                   <div style="display:flex;flex-direction:column;gap:14px;">
                     <sc-for list="{{ classesVM }}" as="c" hint-placeholder-count="3">
                       <div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:{{ c.color }};"></span><span style="font-weight:700;font-size:13.5px;color:var(--ink);">{{ c.name }}</span></div><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);">{{ c.n }}</span></div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:{{ c.color }};"></span><span style="font-weight:700;font-size:13.5px;color:var(--ink);">{{ c.name }}</span></div><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);">{{ c.nDisplay }}</span></div>
                         <div style="height:7px;border-radius:999px;background:var(--ring-track);overflow:hidden;"><div style="height:100%;width:{{ c.barPct }};border-radius:999px;background:{{ c.color }};transition:width .6s;"></div></div>
-                        <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-top:4px;">confidence {{ c.confPct }}</div>
+                        <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-top:4px;">{{ c.confLabel }}</div>
                       </div>
                     </sc-for>
                   </div>
@@ -384,7 +399,7 @@ body{background:#0a0f0c}
             </div>
             <!-- MODEL PERFORMANCE -->
             <div style="border-radius:var(--radius);padding:20px;margin-top:16px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;"><span style="width:34px;height:34px;border-radius:11px;background:var(--secondary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--secondary-c-ink);">insights</span></span><span style="font-weight:700;font-size:16px;color:var(--ink);">Model performance</span><span style="font-size:12px;font-weight:700;color:var(--ink-3);margin-left:auto;">MobileNetV2 · transfer learning · 20% negative class</span></div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;"><span style="width:34px;height:34px;border-radius:11px;background:var(--secondary-c);display:grid;place-items:center;"><span class="ms fill" style="font-size:20px;color:var(--secondary-c-ink);">insights</span></span><span style="font-weight:700;font-size:16px;color:var(--ink);">Model performance</span><span style="font-size:12px;font-weight:700;color:var(--warn);margin-left:auto;">{{ modelMetricsLabel }}</span></div>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;">
                 <div style="padding:16px;border-radius:18px;background:var(--surface-2);"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Accuracy</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:var(--ink);">{{ accInt }}%</div><div style="height:6px;border-radius:999px;background:var(--ring-track);margin-top:8px;overflow:hidden;"><div style="height:100%;width:{{ accInt }}%;background:var(--secondary);border-radius:999px;transition:width .6s;"></div></div></div>
                 <div style="padding:16px;border-radius:18px;background:var(--surface-2);"><div style="font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">Precision</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px;color:var(--ink);">{{ precisionPct }}</div><div style="font-size:12px;font-weight:600;color:var(--ink-3);margin-top:6px;">true positives / all flagged</div></div>
@@ -399,11 +414,11 @@ body{background:#0a0f0c}
           <!-- ================= ENVIRONMENT ================= -->
           <sc-if value="{{ showEnvironment }}" hint-placeholder-val="{{ false }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
-            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Environment</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">Soil & microclimate · capacitive moisture / EC probe + thermal</div></div>
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Environment</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ environmentSubtitle }}</div></div>
             <!-- SOIL GATE -->
             <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:22px 24px;margin-bottom:16px;background:{{ gateColorSoft }};border:1px solid {{ gateColor }};display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
               <span class="ms fill" style="font-size:48px;color:{{ gateColor }};">{{ gateIcon }}</span>
-              <div style="flex:1 1 240px;"><div style="font-size:12px;font-weight:800;color:{{ gateColor }};letter-spacing:.06em;text-transform:uppercase;">Soil-gated spray control</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink);margin-top:2px;">Gate is {{ gateState }} — soil {{ gateWord }}</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:4px;">Moisture {{ moistInt }}% vs {{ gatePct }}% saturation limit. {{ gateExplain }}</div></div>
+              <div style="flex:1 1 240px;"><div style="font-size:12px;font-weight:800;color:{{ gateColor }};letter-spacing:.06em;text-transform:uppercase;">Soil-gated spray control</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink);margin-top:2px;">Gate is {{ gateState }} — soil {{ gateWord }}</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:4px;">{{ gateEvidence }} {{ gateExplain }}</div></div>
               <dc-import name="Ring" value="{{ moistFrac }}" big="{{ moistInt }}" unit="%" sub="Soil H₂O" color="{{ gateColor }}" size="120" hint-size="120px,120px"></dc-import>
             </div>
             <!-- WEATHER -->
@@ -441,7 +456,7 @@ body{background:#0a0f0c}
           <!-- ================= POWER ================= -->
           <sc-if value="{{ showPower }}" hint-placeholder-val="{{ false }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
-            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Power & autonomy</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">10 W solar · {{ capWh }} Wh Li-ion · self-sustaining node</div></div>
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Power & autonomy</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ powerSubtitle }}</div></div>
             <div style="display:flex;gap:16px;flex-wrap:wrap;">
               <!-- BATTERY HERO -->
               <div style="flex:1 1 320px;min-width:280px;border-radius:var(--radius-lg);padding:24px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);">
@@ -496,7 +511,7 @@ body{background:#0a0f0c}
           <!-- ================= ACTIVITY / LOGS ================= -->
           <sc-if value="{{ showLogs }}" hint-placeholder-val="{{ false }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
-            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;"><div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Activity</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ filteredCount }} events · {{ nodeId }} · live telemetry log</div></div></div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;"><div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Activity</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ activitySubtitle }}</div></div><sc-if value="{{ exportAvailable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onExport }}" style="cursor:pointer;border:1px solid var(--glass-brd);background:var(--surface);color:var(--ink);border-radius:13px;padding:10px 14px;font-weight:800;font-size:12px;font-family:'Manrope',sans-serif;display:flex;align-items:center;gap:7px;"><span class="ms" style="font-size:18px;">download</span>Export telemetry CSV</button></sc-if></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
               <sc-for list="{{ logFilters }}" as="f" hint-placeholder-count="5"><button onClick="{{ f.onPick }}" style="{{ f.style }}">{{ f.label }}</button></sc-for>
             </div>
@@ -521,7 +536,7 @@ body{background:#0a0f0c}
               <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ nodesOnline }}/{{ nodesTotal }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Nodes online</div></div>
               <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ fleetSprays }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Sprays today</div></div>
               <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ fleetAvgBatt }}%</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Avg battery</div></div>
-              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--primary);">SF{{ sf }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">LoRaWAN mesh</div></div>
+              <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--primary);">{{ sfLabel }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">LoRaWAN uplink</div></div>
             </div>
             <!-- MAP -->
             <div style="position:relative;overflow:hidden;border-radius:var(--radius-lg);height:400px;background:linear-gradient(160deg,#3c6b3a,#2e5730 55%,#274a2a);box-shadow:var(--shadow);border:1px solid var(--glass-brd);margin-bottom:16px;">
@@ -541,7 +556,7 @@ body{background:#0a0f0c}
                   <div style="display:flex;gap:14px;">
                     <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Battery</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.batteryInt }}%</div></div>
                     <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Pest</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.pestV }}</div></div>
-                    <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Soil</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.soilV }}%</div></div>
+                    <div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;">Soil</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--ink);">{{ nd.soilV }}</div></div>
                   </div>
                 </button>
               </sc-for>
@@ -552,7 +567,7 @@ body{background:#0a0f0c}
           <!-- ================= ANALYTICS ================= -->
           <sc-if value="{{ showAnalytics }}" hint-placeholder-val="{{ false }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;" data-screen-label="Analytics">
-            <div style="margin-bottom:16px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Analytics</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">7-day detection & spray intelligence · {{ nodeId }}</div></div>
+            <div style="margin-bottom:16px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Analytics</div><div style="font-size:14px;font-weight:700;color:var(--warn);margin-top:3px;">{{ analyticsSubtitle }}</div></div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px;">
               <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);">{{ anDet }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Detections this week</div></div>
               <div style="border-radius:20px;padding:16px 18px;background:var(--surface);border:1px solid var(--glass-brd);box-shadow:var(--shadow);"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--secondary);">{{ anSprays }}</div><div style="font-size:12px;font-weight:700;color:var(--ink-2);">Sprays triggered</div></div>
@@ -607,7 +622,7 @@ body{background:#0a0f0c}
           <!-- ================= SETTINGS ================= -->
           <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
           <div style="animation:screenin .45s cubic-bezier(.2,.9,.2,1) both;">
-            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Settings</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">Configure detection, spraying, power & display</div></div>
+            <div style="margin-bottom:18px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--ink);letter-spacing:-.01em;">Settings</div><div style="font-size:14px;font-weight:600;color:var(--ink-2);margin-top:3px;">{{ settingsSubtitle }}</div></div>
             <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
               <!-- CATEGORY RAIL (desktop) -->
               <sc-if value="{{ settingsTwoCol }}" hint-placeholder-val="{{ true }}">
@@ -647,7 +662,7 @@ body{background:#0a0f0c}
                     </sc-for>
                   </div>
                 </sc-for>
-                <div style="text-align:center;padding:10px;font-size:12px;font-weight:600;color:var(--ink-3);">BananaGuard v2.3.0 · University of Mindanao · Blaya · Diaz · Mugat</div>
+                <div style="text-align:center;padding:10px;font-size:12px;font-weight:600;color:var(--ink-3);">BananaGuard prototype UI · firmware version is not included in telemetry · University of Mindanao</div>
               </div>
             </div>
           </div>
@@ -744,6 +759,9 @@ class Component extends DCLogic {
     nodeId: 'N-01',
     paused: this.props.liveData === false,
     live: false,
+    backendReady: false,
+    apiOnline: false,
+    pollError: null,
     unread: 2,
     now: Date.now(),
     photos: [],
@@ -755,7 +773,7 @@ class Component extends DCLogic {
       classes: [
         { key: 'thrips', name: 'Thrips hawaiiensis', short: 'Thrips', n: 3, conf: 0.93, color: 'var(--secondary)' },
         { key: 'aphid', name: 'Banana aphid', short: 'Aphid', n: 1, conf: 0.81, color: 'var(--tertiary)' },
-        { key: 'weevil', name: 'Banana weevil', short: 'Weevil', n: 0, conf: 0.0, color: 'var(--primary)' }
+        { key: 'leafroller', name: 'Banana skipper / leaf-roller', short: 'Leaf-roller', n: 0, conf: 0.0, color: 'var(--primary)' }
       ],
       soilMoist: 38, soilEC: 1.4, soilPH: 6.4, soilTemp: 27.6, airTemp: 31.4, humidity: 73,
       battery: 82, solarIn: 6.4, draw: 1.15,
@@ -791,32 +809,46 @@ class Component extends DCLogic {
   };
 
   componentDidMount() {
+    this._mounted = true;
     this._onResize = () => this.setState({ vw: window.innerWidth });
     window.addEventListener('resize', this._onResize);
     this._timer = setInterval(() => this.tick(), 1500);
     try { const p = JSON.parse(localStorage.getItem('bg_photos') || '[]'); if (p && p.length) this.setState({ photos: p }); } catch (e) {}
     this.probeLive();
   }
-  componentWillUnmount() { clearInterval(this._timer); clearInterval(this._poll); window.removeEventListener('resize', this._onResize); }
+  componentWillUnmount() { this._mounted = false; clearInterval(this._timer); clearInterval(this._poll); window.removeEventListener('resize', this._onResize); }
 
   // ---- live data (backend/server.py). Fails silently -> in-page sim. ----
   probeLive() {
     if (typeof fetch !== 'function' || location.protocol === 'file:') return;
-    fetch('/api/health').then(r => (r.ok ? r.json() : Promise.reject()))
+    this.fetchJSON('/api/health')
       .then(h => {
         if (!h || !h.ok) return;
+        if (this._mounted) this.setState({ backendReady: true, apiOnline: true, pollError: null });
         // Poll even with zero uplinks stored: the first TTN uplink after
         // page load must flip the UI to live without a manual reload.
         // pollLive() sets live:true once rows actually exist.
         this.pollLive();
         this._poll = setInterval(() => this.pollLive(), 5000);
       })
-      .catch(() => {});
+      .catch(() => { if (this._mounted) this.setState({ apiOnline: false }); });
+  }
+
+  fetchJSON(url) {
+    return fetch(url, { cache: 'no-store' }).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
   }
 
   pollLive() {
-    fetch('/api/nodes').then(r => r.json()).then(rows => {
-      if (!Array.isArray(rows) || !rows.length) return;
+    if (this.state.paused || this._pollBusy) return;
+    this._pollBusy = true;
+    this.fetchJSON('/api/nodes').then(rows => {
+      if (!this._mounted) return null;
+      if (!Array.isArray(rows)) throw new Error('invalid node response');
+      this.setState({ backendReady: true, apiOnline: true, pollError: null });
+      if (!rows.length) return null;
       const defaults = this._nodeDefaults || (this._nodeDefaults = this.state.nodes);
       const statusMap = { spraying: 'spray', fault: 'fault', blocked: 'blocked', watch: 'watch', clear: 'clear' };
       // Display IDs are assigned per device_id in first-seen order and
@@ -827,15 +859,20 @@ class Component extends DCLogic {
       const mapped = rows.map(n => {
         const i = parseInt(ords[n.device_id].slice(2), 10) - 1;
         const base = defaults[i] || { name: n.device_id, block: n.device_id, x: 18 + ((i * 23) % 62), y: 18 + ((i * 31) % 58), temp: 30 };
-        const ageMin = Math.max(0, Math.round((Date.now() - Date.parse(n.received_at)) / 60000));
+        const parsedAge = Math.round((Date.now() - Date.parse(n.received_at)) / 60000);
+        const ageMin = Number.isFinite(parsedAge) ? Math.max(0, parsedAge) : 999999;
+        const online = typeof n.online === 'boolean' ? n.online : ageMin < 90;
         return {
           id: ords[n.device_id], device_id: n.device_id,
           name: base.name, block: base.block, x: base.x, y: base.y, temp: base.temp,
           battery: n.batt_pct, pest: n.n_pest,
-          soil: n.soil_vwc_pct == null ? 0 : n.soil_vwc_pct,
+          soil: n.soil_vwc_pct,
           soilSafe: n.soil_safe, spraysToday: n.sprays_today, rawStatus: n.status,
-          status: n.batt_pct < 15 ? 'lowbatt' : (statusMap[n.status] || 'clear'),
-          online: ageMin < 90,
+          rssi: n.rssi, snr: n.snr, sf: n.sf, packets: n.fcnt,
+          eil: n.eil_threshold, windowMinutes: n.window_minutes,
+          receivedAt: n.received_at, safetyViolation: !!n.safety_violation,
+          status: n.status === 'clear' && n.batt_pct < 15 ? 'lowbatt' : (statusMap[n.status] || 'clear'),
+          online,
           last: ageMin < 1 ? 'just now' : ageMin + ' min ago'
         };
       });
@@ -845,21 +882,29 @@ class Component extends DCLogic {
       const cur = rows.find(n => n.device_id === sel.device_id);
       const L = Object.assign({}, this.state.L, {
         pestWindow: cur.n_pest,
+        pestNow: null,
         battery: cur.batt_pct,
         spraysToday: cur.sprays_today,
         soilSafeLive: cur.soil_safe,      // firmware's own gate decision
         faultLive: cur.status === 'fault',
+        safetyViolationLive: !!cur.safety_violation,
+        telemetryOnline: typeof cur.online === 'boolean' ? cur.online : sel.online,
+        receivedAt: cur.received_at,
+        eilLive: cur.eil_threshold,
+        windowMinutesLive: cur.window_minutes || 30,
+        packets: cur.fcnt == null ? null : cur.fcnt,
         sprayStatus: cur.status === 'spraying' ? 'spraying' : cur.status === 'blocked' ? 'blocked' : 'idle'
       });
-      if (cur.soil_vwc_pct != null) L.soilMoist = cur.soil_vwc_pct;
-      if (cur.rssi != null) L.rssi = Math.round(cur.rssi);
-      if (cur.snr != null) L.snr = cur.snr;
-      if (cur.sf) L.sf = cur.sf;
-      this.setState({ nodes: mapped, nodeId, L, live: true });
+      L.soilMoist = cur.soil_vwc_pct;
+      L.rssi = cur.rssi == null ? null : Math.round(cur.rssi);
+      L.snr = cur.snr == null ? null : cur.snr;
+      L.sf = cur.sf == null ? null : cur.sf;
+      this.setState({ nodes: mapped, nodeId, L, live: true, apiOnline: true, pollError: null });
       return Promise.all([
-        fetch('/api/logs?n=30').then(r => r.json()),
-        fetch('/api/history?node=' + encodeURIComponent(sel.device_id) + '&n=16').then(r => r.json())
+        this.fetchJSON('/api/logs?node=' + encodeURIComponent(sel.device_id) + '&n=30'),
+        this.fetchJSON('/api/history?node=' + encodeURIComponent(sel.device_id) + '&n=16')
       ]).then(res => {
+        if (!this._mounted) return;
         const logRows = res[0], histRows = res[1];
         const agoOf = t => { const m = Math.max(0, Math.round((Date.now() - Date.parse(t)) / 60000)); return m < 1 ? 'just now' : m < 60 ? m + ' min' : Math.round(m / 60) + ' h'; };
         const logs = logRows.map(lg => ({ ago: agoOf(lg.time), type: lg.type, title: lg.title + ' · ' + lg.node, detail: lg.detail, sev: lg.sev, icon: lg.icon }));
@@ -873,7 +918,9 @@ class Component extends DCLogic {
         };
         this.setState({ logs, hist });
       });
-    }).catch(() => {});
+    }).catch(err => {
+      if (this._mounted) this.setState({ apiOnline: false, pollError: String(err && err.message || err) });
+    }).then(() => { this._pollBusy = false; });
   }
 
   // In live mode only the fields the 9-byte uplink does NOT carry keep
@@ -926,11 +973,12 @@ class Component extends DCLogic {
       const net = L.solarIn - L.draw;
       L.battery = +Math.max(3, Math.min(100, L.battery + net * 0.016)).toFixed(1);
       const soilSafe = L.soilMoist < s.settings.gatePct;
+      const eil = s.settings.eil || 5;
       let logs = s.logs, spray = L.sprayStatus, unread = s.unread;
-      if (L.pestWindow >= 5 && soilSafe) {
-        if (spray !== 'spraying') { spray = 'spraying'; L.spraysToday += 1; L.litersToday = +(L.litersToday + 0.14).toFixed(2); logs = [{ ago: 'just now', type: 'spray', title: 'Spray actuated — Zone ' + (1 + Math.floor(Math.random() * 3)), detail: 'Pest ' + L.pestWindow.toFixed(1) + ' > EIL 5.0 · soil safe ' + Math.round(L.soilMoist) + '%', sev: 'act', icon: 'sprinkler' }].concat(logs).slice(0, 44); unread += 1; if (s.settings.notifSpray) evt = { icon: 'sprinkler', title: 'Spray actuated', detail: 'Pest ' + L.pestWindow.toFixed(1) + ' > EIL · soil safe ' + Math.round(L.soilMoist) + '%', sev: 'act' }; }
-      } else if (L.pestWindow >= 5 && !soilSafe) {
-        if (spray !== 'blocked') { spray = 'blocked'; logs = [{ ago: 'just now', type: 'blocked', title: 'Spray held — wet soil', detail: 'Soil ' + Math.round(L.soilMoist) + '% > 55% saturation gate', sev: 'warn', icon: 'water_drop' }].concat(logs).slice(0, 44); unread += 1; if (s.settings.notifBlocked) evt = { icon: 'water_drop', title: 'Spray held — wet soil', detail: 'Soil ' + Math.round(L.soilMoist) + '% above saturation gate', sev: 'warn' }; }
+      if (L.pestWindow > eil && soilSafe) {
+        if (spray !== 'spraying') { spray = 'spraying'; L.spraysToday += 1; L.litersToday = +(L.litersToday + 0.14).toFixed(2); logs = [{ ago: 'just now', type: 'spray', title: 'Simulated spray actuated — Zone ' + (1 + Math.floor(Math.random() * 3)), detail: 'Pest ' + L.pestWindow.toFixed(1) + ' > EIL ' + eil.toFixed(1) + ' · soil safe ' + Math.round(L.soilMoist) + '%', sev: 'act', icon: 'sprinkler' }].concat(logs).slice(0, 44); unread += 1; if (s.settings.notifSpray) evt = { icon: 'sprinkler', title: 'Simulated spray actuated', detail: 'Pest ' + L.pestWindow.toFixed(1) + ' > EIL · soil safe ' + Math.round(L.soilMoist) + '%', sev: 'act' }; }
+      } else if (L.pestWindow > eil && !soilSafe) {
+        if (spray !== 'blocked') { spray = 'blocked'; logs = [{ ago: 'just now', type: 'blocked', title: 'Simulated spray held — wet soil', detail: 'Soil ' + Math.round(L.soilMoist) + '% > ' + s.settings.gatePct + '% saturation gate', sev: 'warn', icon: 'water_drop' }].concat(logs).slice(0, 44); unread += 1; if (s.settings.notifBlocked) evt = { icon: 'water_drop', title: 'Simulated spray held — wet soil', detail: 'Soil ' + Math.round(L.soilMoist) + '% above saturation gate', sev: 'warn' }; }
       } else { spray = 'idle'; }
       L.sprayStatus = spray;
       const hist = {
@@ -982,7 +1030,7 @@ class Component extends DCLogic {
   go(route) { this.setState({ route, overlay: null }); }
   setMode(m) { this.setState({ mode: m, overlay: null }); }
   setDirection(k) { this.setState({ direction: k, overlay: null }); }
-  togglePause() { this.setState(s => ({ paused: !s.paused })); }
+  togglePause() { this.setState(s => ({ paused: !s.paused }), () => { if (!this.state.paused) this.pollLive(); }); }
   openOverlay(k) { this.setState({ overlay: k }); }
   closeOverlay() { this.setState({ overlay: null }); }
   ackAlerts() { this.setState({ unread: 0 }); }
@@ -997,6 +1045,15 @@ class Component extends DCLogic {
       if (s.live && nd.device_id) {
         L.soilSafeLive = nd.soilSafe;
         L.faultLive = nd.rawStatus === 'fault';
+        L.safetyViolationLive = nd.safetyViolation;
+        L.telemetryOnline = nd.online;
+        L.receivedAt = nd.receivedAt;
+        L.eilLive = nd.eil;
+        L.windowMinutesLive = nd.windowMinutes || 30;
+        L.rssi = nd.rssi == null ? null : Math.round(nd.rssi);
+        L.snr = nd.snr == null ? null : nd.snr;
+        L.sf = nd.sf == null ? null : nd.sf;
+        L.packets = nd.packets == null ? null : nd.packets;
         L.sprayStatus = nd.rawStatus === 'spraying' ? 'spraying' : nd.rawStatus === 'blocked' ? 'blocked' : 'idle';
         if (nd.spraysToday != null) L.spraysToday = nd.spraysToday;
       }
@@ -1019,7 +1076,19 @@ class Component extends DCLogic {
 
   toggleSetting(k) { this.setState(s => ({ settings: Object.assign({}, s.settings, { [k]: !s.settings[k] }) })); }
   setSetting(k, v) { this.setState(s => ({ settings: Object.assign({}, s.settings, { [k]: v }) })); }
-  testSpray() { this.setState(s => { const L = Object.assign({}, s.L, { sprayStatus: 'spraying', spraysToday: s.L.spraysToday + 1 }); const logs = [{ ago: 'just now', type: 'spray', title: 'Manual test spray', detail: 'Solenoid pulsed 1 s · operator command', sev: 'act', icon: 'sprinkler' }].concat(s.logs).slice(0, 44); return { L, logs, unread: s.unread + 1 }; }); this.pushToast({ icon: 'sprinkler', title: 'Manual test spray', detail: 'Solenoid pulsed 1 s', sev: 'act' }); }
+  testSpray() {
+    if (this.state.live) {
+      this.pushToast({ icon: 'block', title: 'No actuator command sent', detail: 'This dashboard has no authenticated downlink endpoint. Use the firmware test procedure.', sev: 'warn' });
+      return;
+    }
+    this.setState(s => { const L = Object.assign({}, s.L, { sprayStatus: 'spraying', spraysToday: s.L.spraysToday + 1 }); const logs = [{ ago: 'just now', type: 'spray', title: 'Simulated manual test spray', detail: 'UI-only demo · no solenoid command sent', sev: 'act', icon: 'sprinkler' }].concat(s.logs).slice(0, 44); return { L, logs, unread: s.unread + 1 }; });
+    this.pushToast({ icon: 'sprinkler', title: 'Simulated test spray', detail: 'UI-only demo · no hardware command sent', sev: 'act' });
+  }
+  exportTelemetry() {
+    const nd = this.state.nodes.find(n => n.id === this.state.nodeId);
+    if (!this.state.live || !nd || !nd.device_id) return;
+    window.location.assign('/api/export.csv?node=' + encodeURIComponent(nd.device_id) + '&n=10000');
+  }
 
   themeVars() {
     const T = {
@@ -1101,35 +1170,79 @@ class Component extends DCLogic {
     const vw = s.vw;
     const isMobile = vw < 760, isTablet = vw >= 760 && vw < 1080, isDesktop = vw >= 1080;
     const isSimple = s.mode === 'simple', isAdvanced = s.mode === 'advanced';
-    const eil = this.state.settings.eil || 5;
+    const eil = (s.live && L.eilLive != null) ? L.eilLive : (this.state.settings.eil || 5);
     const ratio = L.pestWindow / eil;
-    // Live mode: trust the firmware's Soil_safe (a 20-60% VWC band, not
-    // the dashboard's one-sided slider) — never re-derive it locally.
+    // Live mode: trust the firmware's Soil_safe saturation decision rather
+    // than re-deriving it from the dashboard's local demo slider.
     const soilSafe = (s.live && L.soilSafeLive != null) ? L.soilSafeLive : (L.soilMoist < this.state.settings.gatePct);
 
-    let statusWord, statusPlain, statusColor, statusIcon;
-    if (s.live && L.faultLive) { statusWord = 'FAULT'; statusPlain = 'A sensor on this node reported a fault. Spraying is disabled until it is inspected — no chemicals can be released.'; statusColor = 'var(--bad)'; statusIcon = 'error'; }
-    else if (L.sprayStatus === 'spraying') { statusWord = 'SPRAYING'; statusPlain = 'Targeted spray is active — pests crossed the action threshold and the soil is dry enough to treat.'; statusColor = 'var(--secondary)'; statusIcon = 'sprinkler'; }
-    else if (L.sprayStatus === 'blocked') { statusWord = 'HELD'; statusPlain = 'Pests are high, but the soil is too wet. Spraying is paused to protect the soil and prevent runoff.'; statusColor = 'var(--warn)'; statusIcon = 'pause_circle'; }
-    else if (ratio >= 0.6) { statusWord = 'WATCH'; statusPlain = 'Pest activity is rising and being monitored closely. No spray needed yet.'; statusColor = 'var(--tertiary)'; statusIcon = 'visibility'; }
-    else { statusWord = 'ALL CLEAR'; statusPlain = 'No action needed. Pest levels are low and your crop is protected.'; statusColor = 'var(--ok)'; statusIcon = 'verified'; }
+    let statusWord, statusPlain, statusColor, statusColorSoft, statusIcon;
+    if (s.live && !s.apiOnline) { statusWord = 'CONNECTION LOST'; statusPlain = 'The dashboard cannot reach the telemetry API. Values below are the last confirmed sample and are not being simulated.'; statusColor = 'var(--bad)'; statusColorSoft = 'var(--bad-c)'; statusIcon = 'cloud_off'; }
+    else if (s.live && L.telemetryOnline === false) { statusWord = 'NODE OFFLINE'; statusPlain = 'No recent uplink has arrived from this node. Last-known values are retained for inspection, but no current spray state is claimed.'; statusColor = 'var(--ink-3)'; statusColorSoft = 'var(--surface-3)'; statusIcon = 'sensors_off'; }
+    else if (s.live && L.faultLive) { statusWord = L.safetyViolationLive ? 'SAFETY FAULT' : 'FAULT'; statusPlain = L.safetyViolationLive ? 'A spray action conflicted with a safety flag. Treat the node as locked out and inspect the firmware and actuator before field use.' : 'A sensor or inference fault was reported. Spraying is disabled until the node is inspected.'; statusColor = 'var(--bad)'; statusColorSoft = 'var(--bad-c)'; statusIcon = 'error'; }
+    else if (L.sprayStatus === 'spraying') { statusWord = 'SPRAYING'; statusPlain = 'Targeted spray is active — pests crossed the action threshold and the soil gate is safe.'; statusColor = 'var(--secondary)'; statusColorSoft = 'var(--secondary-c)'; statusIcon = 'sprinkler'; }
+    else if (L.sprayStatus === 'blocked') { statusWord = 'HELD'; statusPlain = 'Pests are above the action threshold, but the safety gate is holding the actuator.'; statusColor = 'var(--warn)'; statusColorSoft = 'var(--warn-c)'; statusIcon = 'pause_circle'; }
+    else if (ratio >= 0.6) { statusWord = 'WATCH'; statusPlain = 'Pest activity is rising and being monitored. The action condition has not been met.'; statusColor = 'var(--tertiary)'; statusColorSoft = 'var(--tertiary-c)'; statusIcon = 'visibility'; }
+    else { statusWord = 'ALL CLEAR'; statusPlain = 'The latest pest window is below the watch range and no action is reported.'; statusColor = 'var(--ok)'; statusColorSoft = 'var(--ok-c)'; statusIcon = 'verified'; }
 
     const pestLevel = ratio >= 1 ? 'HIGH' : ratio >= 0.5 ? 'MEDIUM' : 'LOW';
     const pestColor = ratio >= 1 ? 'var(--bad)' : ratio >= 0.5 ? 'var(--tertiary)' : 'var(--ok)';
-    const gateState = soilSafe ? 'OPEN' : 'CLOSED';
-    const gateWord = soilSafe ? 'GOOD' : 'WET';
-    const gateColor = soilSafe ? 'var(--ok)' : 'var(--warn)';
-    const gateColorSoft = soilSafe ? 'var(--ok-c)' : 'var(--warn-c)';
-    const gateIcon = soilSafe ? 'lock_open' : 'lock';
+    const gateUnavailable = s.live && (!s.apiOnline || L.telemetryOnline === false || L.faultLive);
+    const gateState = gateUnavailable ? 'LOCKED' : (soilSafe ? 'OPEN' : 'CLOSED');
+    const gateWord = gateUnavailable ? 'UNKNOWN' : (soilSafe ? 'GOOD' : 'WET');
+    const gateColor = gateUnavailable ? (L.faultLive ? 'var(--bad)' : 'var(--ink-3)') : (soilSafe ? 'var(--ok)' : 'var(--warn)');
+    const gateColorSoft = gateUnavailable ? (L.faultLive ? 'var(--bad-c)' : 'var(--surface-3)') : (soilSafe ? 'var(--ok-c)' : 'var(--warn-c)');
+    const gateIcon = gateUnavailable ? 'lock' : (soilSafe ? 'lock_open' : 'lock');
 
-    const sigLevel = L.rssi > -92 ? 4 : L.rssi > -100 ? 3 : L.rssi > -107 ? 2 : 1;
+    const rssiKnown = L.rssi != null && Number.isFinite(Number(L.rssi));
+    const snrKnown = L.snr != null && Number.isFinite(Number(L.snr));
+    const sfKnown = L.sf != null && Number.isFinite(Number(L.sf));
+    const packetsKnown = L.packets != null && Number.isFinite(Number(L.packets));
+    const sigLevel = !rssiKnown ? 0 : L.rssi > -92 ? 4 : L.rssi > -100 ? 3 : L.rssi > -107 ? 2 : 1;
     const sigOn = 'var(--primary)', sigOff = 'var(--ring-track)';
-    const signalWord = sigLevel >= 4 ? 'Strong' : sigLevel === 3 ? 'Good' : sigLevel === 2 ? 'Fair' : 'Weak';
+    const signalWord = !rssiKnown ? 'Unavailable' : sigLevel >= 4 ? 'Strong' : sigLevel === 3 ? 'Good' : sigLevel === 2 ? 'Fair' : 'Weak';
 
     const clockD = new Date(s.now);
     const clock = clockD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     const nd0 = s.nodes.find(n => n.id === s.nodeId) || s.nodes[0];
+    const rssiDisplay = rssiKnown ? Math.round(L.rssi) : '—';
+    const sfLabel = sfKnown ? 'SF' + Math.round(L.sf) : 'SF —';
+    const linkDetail = (snrKnown ? 'SNR ' + Number(L.snr).toFixed(1) + ' dB' : 'SNR unavailable') + ' · ' + sfLabel + ' · ' + (packetsKnown ? Math.round(L.packets) + ' pkts' : 'frame count unavailable');
+    const platformBadge = s.live ? 'Hardware identity not in uplink · ' + sfLabel : 'Prototype UI · MobileNetV2 · LoRaWAN ' + sfLabel;
+    const sampleUpdated = s.live ? 'last uplink ' + nd0.last : 'demo clock ' + clock;
+    const windowMinutes = (s.live && L.windowMinutesLive) || this.state.settings.aggWindow || 30;
+    const showSyntheticVision = !s.live;
+    const exportAvailable = !!(s.live && s.apiOnline && nd0 && nd0.device_id);
+    let provenanceLabel, provenanceDetail, provenanceColor, provenanceBg, provenanceIcon;
+    if (s.live && !s.apiOnline) {
+      provenanceLabel = 'LAST-KNOWN TELEMETRY'; provenanceDetail = 'API connection lost. No values are being synthesized; reconnect to refresh this sample.'; provenanceColor = 'var(--bad)'; provenanceBg = 'var(--bad-c)'; provenanceIcon = 'cloud_off';
+    } else if (s.live && L.telemetryOnline === false) {
+      provenanceLabel = 'STALE TTN TELEMETRY'; provenanceDetail = 'Last uplink ' + nd0.last + '. Count, soil, battery, link, and action are retained as historical values.'; provenanceColor = 'var(--warn)'; provenanceBg = 'var(--warn-c)'; provenanceIcon = 'schedule';
+    } else if (s.live) {
+      provenanceLabel = 'TTN TELEMETRY'; provenanceDetail = 'Live fields: ' + windowMinutes + '-min pest count, soil gate/moisture, battery, link quality, faults, and action. Camera, weather, model metrics, and energy estimates are not in the uplink.'; provenanceColor = 'var(--ok)'; provenanceBg = 'var(--ok-c)'; provenanceIcon = 'verified';
+    } else if (s.backendReady) {
+      provenanceLabel = 'SYNTHETIC DEMO · WAITING FOR TTN'; provenanceDetail = 'The backend is reachable but has no uplinks. Every value and action shown is generated locally for interface evaluation only.'; provenanceColor = 'var(--warn)'; provenanceBg = 'var(--warn-c)'; provenanceIcon = 'science';
+    } else {
+      provenanceLabel = 'SYNTHETIC DEMO'; provenanceDetail = 'No telemetry backend is connected. Every value and action shown is generated locally and does not represent field hardware.'; provenanceColor = 'var(--warn)'; provenanceBg = 'var(--warn-c)'; provenanceIcon = 'science';
+    }
+    const liveLabel = s.paused ? 'PAUSED' : (s.live && !s.apiOnline ? 'LINK LOST' : s.live && L.telemetryOnline === false ? 'STALE' : s.live ? 'LIVE · TTN' : s.backendReady ? 'DEMO · WAITING' : 'DEMO · SYNTHETIC');
+    const liveDotColor = s.paused ? 'var(--ink-3)' : (s.live && s.apiOnline && L.telemetryOnline !== false ? 'var(--ok)' : s.live ? 'var(--bad)' : 'var(--warn)');
+    const liveDotAnim = s.paused || (s.live && (!s.apiOnline || L.telemetryOnline === false)) ? '' : 'animation:pulse 1.4s infinite;';
+    const cameraBadge = s.live ? 'CAMERA · NOT TRANSMITTED' : 'CAMERA · SYNTHETIC DEMO';
+    const cameraDotColor = s.live ? 'rgba(255,255,255,.45)' : 'var(--warn)';
+    const cameraDotAnim = s.live ? '' : 'animation:pulse 1.4s infinite;';
+    const cameraDetail = s.live ? windowMinutes + '-min count only · no live image' : L.pestNow + ' demo targets · ' + L.latency + ' ms simulated';
+    const inferenceBadge = s.live ? 'Not in uplink' : 'MobileNetV2 · demo';
+    const detectionSubtitle = s.live ? 'TTN carries the aggregate ' + windowMinutes + '-minute count only · image, frame ID, latency, confidence, and per-class counts are unavailable' : 'Synthetic MobileNetV2 interface demo · no hardware inference connected';
+    const modelMetricsLabel = s.live ? 'REFERENCE VALUES · NOT IN UPLINK' : 'SYNTHETIC DEMO VALUES';
+    const environmentSubtitle = s.live ? 'Live: soil moisture and firmware gate · Demo-only: EC, pH, thermal, air humidity, and weather' : 'Synthetic soil and microclimate demo · no sensors connected';
+    const powerSubtitle = s.live ? 'Live: battery voltage estimate · Modeled only: solar input, draw, load split, and autonomy' : 'Synthetic 10 W solar and 37 Wh battery model · no power sensor connected';
+    const analyticsSubtitle = 'ILLUSTRATIVE DATA ONLY · analytics are not computed from the current telemetry database';
+    const activitySubtitle = s.logs.length + ' events · ' + s.nodeId + ' · ' + (s.live ? 'stored TTN telemetry' : 'synthetic demo log');
+    const exceptionalLiveStatus = s.live && (!s.apiOnline || L.telemetryOnline === false || L.faultLive);
+    const moistureKnown = L.soilMoist != null && Number.isFinite(Number(L.soilMoist));
+    const moistureDisplay = moistureKnown ? Math.round(L.soilMoist) : '—';
 
     const sevMap = {
       act: { tint: 'var(--secondary)', bg: 'var(--secondary-c)' },
@@ -1195,7 +1308,7 @@ class Component extends DCLogic {
     const netFlow = +(L.solarIn - L.draw).toFixed(2);
 
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
-    const classesVM = L.classes.map(c => ({ name: c.name, short: c.short, n: c.n, color: c.color, confPct: Math.round(c.conf * 100) + '%', barPct: Math.round(c.conf * 100) + '%', has: c.n > 0 }));
+    const classesVM = L.classes.map(c => ({ name: c.name, short: c.short, n: c.n, nDisplay: s.live ? '—' : c.n, color: c.color, confLabel: s.live ? 'Not included in the uplink' : 'synthetic confidence ' + Math.round(c.conf * 100) + '%', barPct: s.live ? '0%' : Math.round(c.conf * 100) + '%', has: !s.live && c.n > 0 }));
     const latSpark = this.spark(s.hist.lat), moistSpark = this.spark(s.hist.moist), battSpark = this.spark(s.hist.batt);
     const humidityFrac = clamp01(L.humidity / 100), soilTempFrac = clamp01((L.soilTemp - 15) / 25), airTempFrac = clamp01((L.airTemp - 15) / 25);
     const thermPos = (clamp01((L.airTemp - 18) / 22) * 100).toFixed(1) + '%';
@@ -1208,7 +1321,7 @@ class Component extends DCLogic {
     const filterMap = { all: () => true, detect: (l) => l.type === 'detect', spray: (l) => l.type === 'spray', alert: (l) => l.type === 'blocked' || l.sev === 'warn' || l.sev === 'bad', system: (l) => l.type === 'system' || l.type === 'power' || l.type === 'lora' };
     const filteredLogs = logsDecorated.filter(filterMap[s.logFilter] || (() => true));
     const logFilters = [['all', 'All'], ['detect', 'Detections'], ['spray', 'Sprays'], ['alert', 'Alerts'], ['system', 'System']].map(pair => ({ key: pair[0], label: pair[1], onPick: () => this.setLogFilter(pair[0]), style: 'cursor:pointer;border:1px solid ' + (s.logFilter === pair[0] ? 'transparent' : 'var(--glass-brd)') + ';background:' + (s.logFilter === pair[0] ? 'var(--primary)' : 'var(--surface)') + ';color:' + (s.logFilter === pair[0] ? 'var(--primary-ink)' : 'var(--ink-2)') + ';font-weight:700;font-size:13px;padding:8px 15px;border-radius:999px;font-family:Manrope,sans-serif;white-space:nowrap;' }));
-    const mapNodes = nodeList.map(nd => { const der = this.nodeDerived(nd); const sel = nd.id === s.nodeId; return Object.assign({}, nd, { icon: der.icon, selected: sel, pestV: nd.pest.toFixed(1), soilV: Math.round(nd.soil), tintBg: 'var(--surface-2)', pinStyle: 'position:absolute;left:' + nd.x + '%;top:' + nd.y + '%;transform:translate(-50%,-50%);cursor:pointer;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;z-index:' + (sel ? 3 : 2) + ';', dotStyle: 'width:' + (sel ? 26 : 20) + 'px;height:' + (sel ? 26 : 20) + 'px;border-radius:50%;background:' + nd.color + ';border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35)' + (sel ? ', 0 0 0 5px ' + nd.color + '55' : '') + ';', chipStyle: 'font-size:10px;font-weight:800;color:var(--ink);background:var(--surface);padding:2px 8px;border-radius:999px;box-shadow:var(--shadow);white-space:nowrap;', cardStyle: 'cursor:pointer;text-align:left;border:1px solid ' + (sel ? 'var(--primary)' : 'var(--glass-brd)') + ';border-radius:var(--radius);padding:18px;background:var(--surface);box-shadow:var(--shadow);width:100%;' }); });
+    const mapNodes = nodeList.map(nd => { const der = this.nodeDerived(nd); const sel = nd.id === s.nodeId; return Object.assign({}, nd, { icon: der.icon, selected: sel, pestV: Number(nd.pest).toFixed(1), soilV: nd.soil == null ? '—' : Math.round(nd.soil) + '%', tintBg: 'var(--surface-2)', pinStyle: 'position:absolute;left:' + nd.x + '%;top:' + nd.y + '%;transform:translate(-50%,-50%);cursor:pointer;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;z-index:' + (sel ? 3 : 2) + ';', dotStyle: 'width:' + (sel ? 26 : 20) + 'px;height:' + (sel ? 26 : 20) + 'px;border-radius:50%;background:' + nd.color + ';border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35)' + (sel ? ', 0 0 0 5px ' + nd.color + '55' : '') + ';', chipStyle: 'font-size:10px;font-weight:800;color:var(--ink);background:var(--surface);padding:2px 8px;border-radius:999px;box-shadow:var(--shadow);white-space:nowrap;', cardStyle: 'cursor:pointer;text-align:left;border:1px solid ' + (sel ? 'var(--primary)' : 'var(--glass-brd)') + ';border-radius:var(--radius);padding:18px;background:var(--surface);box-shadow:var(--shadow);width:100%;' }); });
     const fleetAvgBatt = Math.round(s.nodes.reduce((a, b) => a + b.battery, 0) / s.nodes.length);
     const S = s.settings;
     const modeOptions = [{ label: 'Simple', active: isSimple, onPick: () => this.setMode('simple') }, { label: 'Advanced', active: isAdvanced, onPick: () => this.setMode('advanced') }].map(o => ({ label: o.label, onPick: o.onPick, style: 'flex:1;cursor:pointer;border:none;padding:8px 14px;border-radius:9px;font-weight:700;font-size:13px;font-family:Manrope,sans-serif;background:' + (o.active ? 'var(--primary)' : 'transparent') + ';color:' + (o.active ? 'var(--primary-ink)' : 'var(--ink-2)') + ';' }));
@@ -1222,13 +1335,13 @@ class Component extends DCLogic {
     const btn = (icon, label, desc, btnLabel, onClick) => ({ isButton: true, icon, label, desc, btnLabel, onClick });
     const catContent = {
       general: [{ title: 'Device', rows: [info('sensors', 'Active node', s.nodeId + ' \u00b7 ' + nd0.name), info('place', 'Location', nd0.block + ' \u00b7 Davao')] }, { title: 'Preferences', rows: [seg('units', 'straighten', 'Temperature unit', 'Used across all readings', [{ label: '\u00b0C', value: 'C' }, { label: '\u00b0F', value: 'F' }]), seg('language', 'translate', 'Language', '', [{ label: 'English', value: 'English' }, { label: 'Filipino', value: 'Filipino' }, { label: 'Bisaya', value: 'Bisaya' }])] }],
-      detection: [{ title: 'Model', rows: [info('memory', 'Architecture', 'MobileNetV2'), rng('confidence', 'tune', 'Confidence threshold', 'Minimum score to accept a detection', 0.5, 0.95, 0.01, '', (v) => Math.round(v * 100) + '%'), tog('negClass', 'block', 'Negative-class rejection', 'Filter droplets, shadows, dirt & non-target insects'), tog('roiDiff', 'crop_free', 'ROI frame-differencing', 'Only classify moving regions to save compute')] }, { title: 'Thresholds', rows: [rng('eil', 'warning', 'Economic Injury Level', 'Targets per frame before spraying is justified', 2, 10, 1, ''), rng('captureInterval', 'schedule', 'Capture interval', 'Time between inference cycles', 10, 120, 5, ' s')] }],
-      spray: [{ title: 'Soil gate', rows: [rng('gatePct', 'water_drop', 'Soil-saturation gate', 'Block spraying above this moisture level', 40, 80, 1, '%'), rng('aggWindow', 'timelapse', 'Aggregation window', 'Detections pooled over this window', 10, 60, 5, ' min')] }, { title: 'Actuation', rows: [rng('sprayDur', 'sprinkler', 'Spray duration', 'Solenoid open time per pulse', 2, 20, 1, ' s'), rng('maxSprays', 'repeat', 'Max sprays per day', 'Safety cap on chemical volume', 1, 24, 1, ''), btn('bolt', 'Test spray now', 'Manually pulse the solenoid for 1 second', 'Run', () => this.testSpray())] }],
+      detection: [{ title: 'Model', rows: [info('memory', 'Architecture', 'MobileNetV2'), rng('confidence', 'tune', 'Confidence threshold', 'Local demo value; the dashboard has no configuration downlink', 0.5, 0.95, 0.01, '', (v) => Math.round(v * 100) + '%'), tog('negClass', 'block', 'Negative-class rejection', 'Local demo toggle; firmware remains unchanged'), tog('roiDiff', 'crop_free', 'ROI frame-differencing', 'Local demo toggle; firmware remains unchanged')] }, { title: 'Thresholds', rows: [rng('eil', 'warning', 'Economic Injury Level', 'Targets per 30-minute window; action requires count strictly above EIL', 2, 10, 1, ''), rng('captureInterval', 'schedule', 'Capture interval', 'Local demo interval; firmware remains unchanged', 10, 120, 5, ' s')] }],
+      spray: [{ title: 'Soil gate', rows: [rng('gatePct', 'water_drop', 'Soil-saturation gate', 'Local demo threshold; live mode trusts the firmware soil_safe flag', 40, 80, 1, '%'), rng('aggWindow', 'timelapse', 'Aggregation window', 'Detections pooled over this trailing window', 10, 60, 5, ' min')] }, { title: 'Actuation', rows: [rng('sprayDur', 'sprinkler', 'Spray duration', 'Local demo value; firmware remains unchanged', 2, 20, 1, ' s'), rng('maxSprays', 'repeat', 'Max sprays per day', 'Local demo value; firmware remains unchanged', 1, 24, 1, ''), btn('bolt', 'Test spray', s.live ? 'Unavailable in live mode: no authenticated actuator downlink exists' : 'UI-only simulation; no solenoid command is sent', 'Run', () => this.testSpray())] }],
       power: [{ title: 'Energy management', rows: [tog('lowPower', 'battery_saver', 'Low-power mode', 'Reduce inference frequency to extend runtime'), tog('solarPriority', 'solar_power', 'Solar-priority charging', 'Prefer solar input over battery draw'), rng('dutyCycle', 'schedule', 'Duty cycle', 'Deep-sleep interval between cycles', 15, 60, 5, ' min'), rng('saverPct', 'battery_alert', 'Battery-saver threshold', 'Enter low-power below this level', 5, 40, 5, '%')] }],
-      connectivity: [{ title: 'LoRaWAN', rows: [seg('sf', 'cell_tower', 'Spreading factor', 'Higher = more range, lower data rate', [{ label: 'SF9', value: 9 }, { label: 'SF10', value: 10 }, { label: 'SF11', value: 11 }]), info('wifi', 'Frequency band', '915 MHz'), rng('uplink', 'sync', 'Uplink interval', 'How often metrics transmit', 5, 60, 5, ' min'), tog('cloudSync', 'cloud', 'Cloud sync', 'Upload metrics to the dashboard')] }],
+      connectivity: [{ title: 'LoRaWAN', rows: [seg('sf', 'cell_tower', 'Spreading factor', 'Local demo value; the deployment plan is configured in firmware', [{ label: 'SF9', value: 9 }, { label: 'SF10', value: 10 }, { label: 'SF11', value: 11 }]), info('wifi', 'Frequency plan', 'Unverified · firmware RF disabled'), rng('uplink', 'sync', 'Uplink interval', 'Local demo interval; firmware remains unchanged', 5, 60, 5, ' min'), tog('cloudSync', 'cloud', 'Cloud sync', 'Local display toggle; no node command is sent')] }],
       notifications: [{ title: 'Push alerts', rows: [tog('notifDetect', 'pest_control', 'Pest detections', ''), tog('notifSpray', 'sprinkler', 'Spray events', ''), tog('notifBlocked', 'water_drop', 'Soil-gate holds', ''), tog('notifPower', 'bolt', 'Power & battery', ''), tog('notifOffline', 'cloud_off', 'Node offline', '')] }],
       display: [{ title: 'Appearance', rows: [{ isTheme: true, icon: 'palette', label: 'Visual direction', desc: 'Color world for the whole app' }, { isModeSeg: true, icon: 'visibility', label: 'View mode', desc: 'Simple is optimized for field use' }, seg('textScale', 'format_size', 'Text size', '', [{ label: 'Default', value: 'Default' }, { label: 'Large', value: 'Large' }, { label: 'XL', value: 'XL' }]), tog('reduceMotion', 'animation', 'Reduce motion', 'Minimise background & transition animation')] }],
-      about: [{ title: 'Hardware', rows: [info('memory', 'Controller', 'ESP32-C6'), info('photo_camera', 'Camera', 'OV5640 \u00b7 5 MP'), info('bolt', 'Power', '10 W solar \u00b7 37 Wh'), info('shield', 'Enclosure', 'IP65 polycarbonate'), info('tag', 'Firmware', 'v2.3.0')] }, { title: 'Research', rows: [info('school', 'Institution', 'Univ. of Mindanao'), info('group', 'Team', 'Blaya \u00b7 Diaz \u00b7 Mugat'), info('menu_book', 'Study', 'Edge-AI pest control')] }]
+      about: [{ title: 'Hardware', rows: [info('memory', 'Controller', 'ESP32-C6 target · board port pending'), info('photo_camera', 'Camera', 'OV5642 driver · confirm module'), info('bolt', 'Power', '10 W solar \u00b7 37 Wh design'), info('shield', 'Enclosure', 'IP65 specified · verify assembly'), info('tag', 'Firmware', '0.1 configured · not in uplink')] }, { title: 'Research', rows: [info('school', 'Institution', 'Univ. of Mindanao'), info('group', 'Team', 'Blaya \u00b7 Diaz \u00b7 Mugat'), info('menu_book', 'Study', 'Edge-AI pest control')] }]
     };
     const settingsSections = catContent[s.settingsCat] || [];
 
@@ -1278,14 +1391,14 @@ class Component extends DCLogic {
       weekVM: an.weekVM, heatRows: an.heatRows, hourLabels: an.hourLabels, savingsSpark,
       savTotal: an.sav[an.sav.length - 1], anDet: an.totalDet, anSprays: an.totalSprays, peakLabel: an.peakLabel,
       weather,
-      tLive: t.live, tStatusWord: t.status[statusKey], tStatusPlain: t.plain[statusKey],
-      tBattery: t.battery, tDaysLeft: t.daysLeft(autonomyStr),
-      tPestLabel: t.pest, tPestLevel: t.level[pestLevel], tPestDetail: t.pestDetail(L.pestNow, eil.toFixed(0)),
-      tSoil: t.soil, tGateWord: t.gate[gateWord], tSoilDetail: t.soilDetail(Math.round(L.soilMoist), t.gateSt[gateState]),
-      tPesticide: t.pesticide(L.pesticideCut), tImpact: t.impact(L.co2Saved, L.litersAvoided),
-      tCam: t.cam, tCamSub: t.camSub, tAlerts: t.alerts, tAlertsSub: t.updates(s.unread),
+      tLive: provenanceLabel, tStatusWord: exceptionalLiveStatus ? statusWord : t.status[statusKey], tStatusPlain: s.live ? statusPlain : t.plain[statusKey],
+      tBattery: t.battery, tDaysLeft: s.live ? 'Autonomy requires multi-night analysis' : t.daysLeft(autonomyStr),
+      tPestLabel: t.pest, tPestLevel: t.level[pestLevel], tPestDetail: s.live ? ('N̂_pest ' + Number(L.pestWindow).toFixed(0) + ' in trailing ' + windowMinutes + '-min window · EIL ' + eil.toFixed(0)) : t.pestDetail(L.pestNow, eil.toFixed(0)),
+      tSoil: t.soil, tGateWord: t.gate[gateWord] || gateWord, tSoilDetail: s.live ? (moistureKnown ? ('Moisture ' + moistureDisplay + '% · firmware gate ' + gateState) : ('Moisture unavailable · firmware gate ' + gateState)) : t.soilDetail(moistureDisplay, t.gateSt[gateState] || gateState),
+      tPesticide: s.live ? 'Impact estimate unavailable' : t.pesticide(L.pesticideCut), tImpact: s.live ? 'Chemical and CO₂ savings are not included in the current uplink.' : t.impact(L.co2Saved, L.litersAvoided),
+      tCam: s.live ? 'Detection evidence' : t.cam, tCamSub: s.live ? 'Images are not included in LoRaWAN telemetry' : t.camSub, tAlerts: t.alerts, tAlertsSub: t.updates(s.unread),
       rootStyle: Object.assign({}, this.themeVars(), {
-        minHeight: '100vh', width: '100%', fontFamily: "'Manrope',system-ui,sans-serif",
+        minHeight: '100dvh', width: '100%', fontFamily: "'Manrope',system-ui,sans-serif",
         color: 'var(--ink)', background: 'var(--bg1)', position: 'relative', overflowX: 'hidden',
         backgroundImage: 'radial-gradient(1200px 700px at 10% -8%, var(--bg2), transparent 55%), radial-gradient(1000px 820px at 108% 112%, var(--bg3), transparent 55%)',
         transition: 'background .5s ease, color .3s ease', WebkitFontSmoothing: 'antialiased', zoom: textZoom
@@ -1306,36 +1419,45 @@ class Component extends DCLogic {
       nodeId: s.nodeId, nodeName: nd0.name, nodeBlock: nd0.block,
       clock,
       statusWord, statusPlain, statusColor, statusIcon,
-      statusColorSoft: statusColor.replace('var(--', 'var(--').replace(')', '-c)'),
-      statusTint: 'linear-gradient(135deg,' + statusColor.replace(')', '-c)').replace('var(--', 'var(--') + ',transparent 62%)',
+      statusColorSoft,
+      statusTint: 'linear-gradient(135deg,' + statusColorSoft + ',transparent 62%)',
       pestLevel, pestColor,
-      pestWindow: L.pestWindow.toFixed(1), pestNowInt: L.pestNow, eilInt: eil.toFixed(0),
+      pestWindow: Number(L.pestWindow).toFixed(1), pestNowInt: L.pestNow == null ? '—' : L.pestNow, pestNowDisplay: L.pestNow == null ? '—' : L.pestNow, eilInt: eil.toFixed(0),
       ratioPct: Math.min(100, ratio * 100).toFixed(0) + '%',
       pestSeg1: ratio >= 0.001 ? pestColor : 'var(--ring-track)',
       pestSeg2: ratio >= 0.5 ? pestColor : 'var(--ring-track)',
       pestSeg3: ratio >= 1 ? pestColor : 'var(--ring-track)',
       battInt: Math.round(L.battery), battPct: Math.round(L.battery) + '%', battFrac: L.battery / 100,
       autonomy: ((L.battery / 100) * 11.5).toFixed(1),
-      moistInt: Math.round(L.soilMoist), moistPct: Math.round(L.soilMoist) + '%', moistFrac: L.soilMoist / 100,
+      batteryDetail: s.live ? 'Charge estimate from battery voltage · autonomy and solar input are modeled' : ('≈ ' + ((L.battery / 100) * 11.5).toFixed(1) + ' demo days · +' + L.solarIn.toFixed(1) + ' W simulated solar'),
+      moistInt: moistureDisplay, moistPct: moistureKnown ? moistureDisplay + '%' : '0%', moistFrac: moistureKnown ? L.soilMoist / 100 : 0,
       gateState, gateWord, gateColor, gateColorSoft, gateIcon,
       soilSafe,
-      rssi: L.rssi, snr: L.snr.toFixed(1), sf: L.sf, packets: L.packets, signalWord,
+      rssi: rssiDisplay, snr: snrKnown ? Number(L.snr).toFixed(1) : '—', sf: sfKnown ? Math.round(L.sf) : '—', packets: packetsKnown ? Math.round(L.packets) : '—', signalWord,
+      linkDetail, sfLabel, platformBadge, sampleUpdated,
       sig1: sigLevel >= 1 ? sigOn : sigOff, sig2: sigLevel >= 2 ? sigOn : sigOff, sig3: sigLevel >= 3 ? sigOn : sigOff, sig4: sigLevel >= 4 ? sigOn : sigOff,
       accInt: Math.round(L.accuracy * 100), accFrac: L.accuracy, latency: L.latency,
       precisionPct: Math.round(L.precision * 100) + '%', recallPct: Math.round(L.recall * 100) + '%', f1Pct: (L.f1 * 100).toFixed(0) + '%',
       solarIn: L.solarIn.toFixed(1), draw: L.draw.toFixed(2), netFlow: (netFlow >= 0 ? '+' : '') + netFlow,
       spraysToday: L.spraysToday, litersToday: L.litersToday.toFixed(2),
       pesticideCut: L.pesticideCut, co2Saved: L.co2Saved, litersAvoided: L.litersAvoided,
+      pesticideCutDisplay: s.live ? '—' : L.pesticideCut + '%', co2SavedDisplay: s.live ? '—' : L.co2Saved, litersAvoidedDisplay: s.live ? '—' : L.litersAvoided,
       pestSpark: this.spark(s.hist.pest), solarSpark: this.spark(s.hist.solar),
       recentLogs: logsDecorated.slice(0, 4),
       fleetMini, nodesOnline, nodesTotal: s.nodes.length,
-      liveLabel: s.paused ? 'PAUSED' : (s.live ? 'LIVE · TTN' : 'LIVE · SIM'), liveDotColor: s.paused ? 'var(--ink-3)' : (s.live ? 'var(--ok)' : 'var(--bad)'), liveDotAnim: s.paused ? '' : 'animation:pulse 1.4s infinite;',
+      liveLabel, liveDotColor, liveDotAnim,
+      provenanceLabel, provenanceDetail, provenanceColor, provenanceBg, provenanceIcon,
+      exportAvailable, onExport: () => this.exportTelemetry(),
+      showSyntheticVision, showLiveNoCamera: !showSyntheticVision,
+      cameraBadge, cameraDotColor, cameraDotAnim, cameraDetail, inferenceBadge,
+      detectionSubtitle, modelMetricsLabel, environmentSubtitle, powerSubtitle, analyticsSubtitle, activitySubtitle,
+      settingsSubtitle: s.live ? 'Local display and demo controls only · this dashboard does not write firmware configuration' : 'Synthetic demo controls · no field hardware is connected',
       unread: s.unread, hasUnread: s.unread > 0,
       overlayOpen: !!s.overlay,
       ovTheme: s.overlay === 'theme', ovNodes: s.overlay === 'nodes', ovAlerts: s.overlay === 'alerts', ovMore: s.overlay === 'more',
       overlayMax: isMobile ? '100%' : '460px', overlayMargin: isMobile ? '0' : 'auto auto',
       directions, nodeList, moreItems, alertList,
-      pestNowInt: L.pestNow,
+      pestNowInt: L.pestNow == null ? '—' : L.pestNow,
       onSimple: () => this.setMode('simple'), onAdvanced: () => this.setMode('advanced'),
       onTogglePause: () => this.togglePause(),
       onOpenTheme: () => this.openOverlay('theme'), onOpenNodes: () => this.openOverlay('nodes'), onOpenAlerts: () => this.openOverlay('alerts'), onOpenMore: () => this.openOverlay('more'),
@@ -1348,7 +1470,8 @@ class Component extends DCLogic {
       photoGrid: s.photos.map((ph, i) => React.createElement('div', { key: i, style: { aspectRatio: '1', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--glass-brd)' } }, React.createElement('img', { src: ph, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }))),
       // Environment
       gatePct: this.state.settings.gatePct,
-      gateExplain: soilSafe ? 'Spraying is permitted when pests exceed the EIL.' : 'All spray commands are held until the soil drains.',
+      gateEvidence: s.live ? (moistureKnown ? ('Reported moisture ' + moistureDisplay + '%; the dashboard trusts the firmware soil_safe flag.') : 'The soil reading is unavailable.') : ('Synthetic moisture ' + moistureDisplay + '% vs ' + this.state.settings.gatePct + '% demo limit.'),
+      gateExplain: gateUnavailable ? 'The gate is treated as locked.' : soilSafe ? 'Spraying is permitted only when the pest count is strictly above EIL.' : 'All spray commands are held until the soil is safe.',
       airTempFrac, airTempV: L.airTemp.toFixed(1), soilTempFrac, soilTempV: L.soilTemp.toFixed(1),
       humidityFrac, humidityV: L.humidity, phV: L.soilPH.toFixed(1), phMarker, ecV: L.soilEC.toFixed(2), ecPct, thermPos,
       moistSpark,

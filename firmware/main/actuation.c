@@ -17,13 +17,14 @@
 
 static const char *TAG = "act";
 
-#define ACT_MAGIC 0xACC70FFu
+#define ACT_MAGIC 0xACC7100u
 
 typedef struct {
     uint32_t magic;
     uint32_t day_idx;        /* unix_seconds / 86400 the counter belongs to */
     uint8_t  sprays_today;
-    uint32_t last_spray_ts;  /* unix seconds, 0 = never */
+    uint8_t  has_last_spray; /* explicit: unix timestamp zero is valid */
+    uint32_t last_spray_ts;  /* unix seconds */
     uint32_t crc;
 } act_state_t;
 
@@ -34,9 +35,9 @@ static uint32_t calc_crc(void)
     return esp_crc32_le(0, (const uint8_t *)&s_act, offsetof(act_state_t, crc));
 }
 
-static void relay_off(void)
+static esp_err_t relay_off(void)
 {
-    gpio_set_level(BG_PIN_RELAY, !BG_RELAY_ACTIVE_LEVEL);
+    return gpio_set_level(BG_PIN_RELAY, !BG_RELAY_ACTIVE_LEVEL);
 }
 
 static void roll_day(void)
@@ -57,7 +58,17 @@ esp_err_t actuation_init(void)
     };
     esp_err_t err = gpio_config(&io);
     if (err != ESP_OK) return err;
-    relay_off();
+
+    /* Program the safe latch while the deep-sleep hold is still active, then
+     * release it. Without this release, a wake from deep sleep can leave the
+     * relay permanently held OFF and make every reported spray a no-op. */
+    err = relay_off();
+    if (err != ESP_OK) return err;
+    gpio_deep_sleep_hold_dis();
+    err = gpio_hold_dis(BG_PIN_RELAY);
+    if (err != ESP_OK) return err;
+    err = relay_off();
+    if (err != ESP_OK) return err;
 
     if (s_act.magic != ACT_MAGIC || s_act.crc != calc_crc()) {
         ESP_LOGW(TAG, "lockout state invalid (cold boot) — reset");
@@ -77,19 +88,28 @@ uint8_t actuation_sprays_today(void)
 
 uint32_t actuation_min_since_last(void)
 {
-    if (!s_act.last_spray_ts) return UINT32_MAX;
+    if (!s_act.has_last_spray) return UINT32_MAX;
     time_t now = time(NULL);
     if ((uint32_t)now <= s_act.last_spray_ts) return 0;
     return ((uint32_t)now - s_act.last_spray_ts) / 60;
 }
 
-esp_err_t actuation_spray(bool sensor_fault)
+esp_err_t actuation_spray(bool sensor_fault, bool soil_safe, uint16_t batt_mv)
 {
     /* Hard lockout re-check — this driver is the last line of defence and
      * must not trust that the caller already ran the decision engine. */
     roll_day();
     if (sensor_fault) {
         ESP_LOGE(TAG, "REFUSED: sensor fault");
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (!soil_safe) {
+        ESP_LOGE(TAG, "REFUSED: soil unsafe");
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (batt_mv < BG_BATT_MIN_SPRAY_MV) {
+        ESP_LOGE(TAG, "REFUSED: battery %u mV < %u mV",
+                 batt_mv, BG_BATT_MIN_SPRAY_MV);
         return ESP_ERR_INVALID_STATE;
     }
     if (s_act.sprays_today >= BG_MAX_SPRAYS_PER_DAY) {
@@ -106,14 +126,20 @@ esp_err_t actuation_spray(bool sensor_fault)
      * conservative outcome (spray counted, maybe not fully delivered) is
      * the safe one. */
     s_act.sprays_today++;
+    s_act.has_last_spray = 1;
     s_act.last_spray_ts = (uint32_t)time(NULL);
     s_act.crc = calc_crc();
 
     ESP_LOGI(TAG, "solenoid ON for %d ms (spray %u/%u today)",
              BG_SPRAY_PULSE_MS, s_act.sprays_today, BG_MAX_SPRAYS_PER_DAY);
-    gpio_set_level(BG_PIN_RELAY, BG_RELAY_ACTIVE_LEVEL);
+    esp_err_t err = gpio_set_level(BG_PIN_RELAY, BG_RELAY_ACTIVE_LEVEL);
+    if (err != ESP_OK) {
+        relay_off();
+        return err;
+    }
     vTaskDelay(pdMS_TO_TICKS(BG_SPRAY_PULSE_MS));
-    relay_off();
+    err = relay_off();
+    if (err != ESP_OK) return err;
     ESP_LOGI(TAG, "solenoid OFF");
     return ESP_OK;
 }
