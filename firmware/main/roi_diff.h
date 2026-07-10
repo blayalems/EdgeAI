@@ -3,10 +3,10 @@
  * @brief Frame-differencing ROI module — the compute-saving stage.
  *
  * Compares the current frame's grayscale thumbnail against a reference
- * thumbnail persisted in RTC memory across deep-sleep cycles. If enough
- * pixels changed, it returns the bounding box of the moving region (mapped
- * back to full-capture coordinates, padded) so only that crop is fed to the
- * classifier. If nothing moved, inference is skipped entirely.
+ * thumbnail persisted in RTC memory across deep-sleep cycles. Disconnected
+ * changed-pixel components become separate padded crops, allowing the
+ * classify-then-count pipeline to count multiple target instances in one
+ * frame. If nothing moved, inference is skipped entirely.
  */
 #pragma once
 
@@ -20,10 +20,15 @@ typedef struct {
     int  x, y, w, h;    /* padded ROI in full-capture pixel coordinates */
 } bg_roi_t;
 
-/** Diff `thumb` (BG_DIFF_THUMB_W*H grayscale) against the RTC reference.
- *  frame_w/frame_h are the full-capture dimensions the ROI is mapped to.
- *  First boot (no valid reference): returns motion=false and just seeds
- *  the reference — one blind cycle instead of one false trigger. */
+/** Diff `thumb` (BG_DIFF_THUMB_W*H grayscale) against the RTC reference and
+ *  return up to `capacity` disconnected moving regions, largest first.
+ *  frame_w/frame_h are the full-capture dimensions the ROIs are mapped to.
+ *  First boot seeds the reference and returns zero — one blind cycle instead
+ *  of one false trigger. */
+int roi_diff_detect_many(const uint8_t *thumb, int frame_w, int frame_h,
+                         bg_roi_t *out, int capacity);
+
+/** Compatibility helper returning only the largest moving region. */
 bg_roi_t roi_diff_detect(const uint8_t *thumb, int frame_w, int frame_h);
 
 /** Blend the current thumbnail into the reference (slow background update,

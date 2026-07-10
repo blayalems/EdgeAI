@@ -22,6 +22,11 @@ bg_decision_t decision_evaluate(const bg_decision_in_t *in)
         d.reason = BG_REASON_SOIL_FAULT;
         return d;
     }
+    if (in->actuator_fault) {
+        d.action = BG_ACTION_FAULT;
+        d.reason = BG_REASON_ACTUATION_FAULT;
+        return d;
+    }
 
     /* 2. Eq. 2:  spray ⟺ (N̂_pest > N_EIL) ∧ Soil_safe  */
     if (in->n_pest <= BG_N_EIL) {
@@ -79,6 +84,8 @@ const char *decision_reason_str(bg_reason_t r)
     case BG_REASON_SOIL_FAULT:   return "soil_fault";
     case BG_REASON_CAMERA_FAULT: return "camera_fault";
     case BG_REASON_LOW_BATTERY:  return "low_battery";
+    case BG_REASON_ACTUATION_REFUSED: return "actuation_refused";
+    case BG_REASON_ACTUATION_FAULT:   return "actuation_fault";
     }
     return "?";
 }

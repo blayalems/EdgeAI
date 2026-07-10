@@ -4,7 +4,7 @@
  *
  *        spray ⟺ (N̂_pest > N_EIL) ∧ Soil_safe
  *
- * plus the safety inhibitors (sensor fault, daily lockout, low battery)
+ * plus the safety inhibitors (sensor/actuator fault, daily lockout, low battery)
  * that gate the actuation path. Pure function of its inputs — no I/O —
  * so it is host-unit-testable.
  */
@@ -29,6 +29,8 @@ typedef enum {
     BG_REASON_SOIL_FAULT,
     BG_REASON_CAMERA_FAULT,
     BG_REASON_LOW_BATTERY,
+    BG_REASON_ACTUATION_REFUSED,
+    BG_REASON_ACTUATION_FAULT,
 } bg_reason_t;
 
 typedef struct {
@@ -36,6 +38,7 @@ typedef struct {
     bool soil_safe;
     bool soil_fault;
     bool camera_fault;
+    bool actuator_fault;
     uint16_t batt_mv;
     uint8_t sprays_today;     /* from actuation lockout state */
     uint32_t min_since_last_spray; /* UINT32_MAX if never sprayed */

@@ -16,7 +16,8 @@ through The Things Network, and feed a web dashboard plus cloud log.
 | `cloud/` | Lowest-code cloud log: TTN webhook → Google Sheets Apps Script (Grafana notes included) | — |
 | `test/` | Servo specimen rig (Arduino), host-side decision-engine mirror + Eq. 2 unit tests & scenario sim, Phase-1 ground-truth logger | Weeks 13–15 |
 | `analysis/` | 3×MAD filter, TOST equivalence, confusion/F1 tables, battery autonomy, pesticide/CO₂ impact — manuscript-format figures | Member 3, Weeks 16 & 28 |
-| `index.html`, `support.js`, `Ring.dc.html`, `vendor/` | Web dashboard (single-page, no build step; React vendored for offline use). Auto-detects the backend: shows `LIVE · TTN` on real uplinks, `LIVE · SIM` standalone | — |
+| `docs/` | Supplied IEEE LaTeX manuscript plus implementation traceability, unresolved hardware gates, and study-design findings | Project team |
+| `index.html`, `support.js`, `Ring.dc.html`, `vendor/` | Web dashboard (single-page, no build step; React vendored for offline use). Distinguishes TTN telemetry, stale/link-lost state, and synthetic demo data | — |
 
 ## Data flow
 
@@ -42,9 +43,11 @@ Tag a release (`git tag v0.1.0 && git push --tags`) to get the .exe and
 ## Tests
 
 ```sh
-python3 backend/test_backend.py                        # backend (10 tests)
+python backend/test_backend.py                         # backend (22 tests)
 node decoder/test_decoder.js                           # payload decoder
-( cd test/decision_sim && python3 test_decision_engine.py && python3 scenario_sim.py )
+( cd test/decision_sim && python -m unittest discover -p "test*.py" -v && python scenario_sim.py )
+( cd ml && python -m unittest discover -s tests -v )   # frozen-split/model contracts
+( cd analysis && python -m unittest discover -s tests -v )
 ```
 
 ## Quick start
@@ -69,6 +72,15 @@ cd EdgeAI
 
   Opening `index.html` directly (file://) still works and runs on
   simulated in-page data.
+
+## Field-readiness boundary
+
+The repository is host-tested, but it is not yet a field-ready ESP32-C6
+release. The reviewed firmware pin map targets classic ESP32/WROOM-32 and now
+fails closed on other targets; the manuscript's C6 board map, OV5640/OV5642
+choice, peak-RAM budget, Philippine LoRaWAN plan, trained INT8 model, OTAA
+credentials, and sensor/EIL calibration remain deployment gates. See
+`docs/implementation_audit.md` before purchasing or flashing hardware.
 
 ## Project conventions
 

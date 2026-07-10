@@ -7,30 +7,68 @@ how to verify it, what is still open.
 
 | Component | Status | Notes |
 |---|---|---|
-| Firmware (`firmware/`) | ✅ code-complete | Needs real model in `model_data.cc` + ttn-esp32 component + OTAA keys before field use |
-| Dashboard (`index.html`) | ✅ live-wired | Polls `/api/*` when served by the backend (verified in headless Chromium); falls back to in-page sim on `file://` or without backend |
-| ML pipeline (`ml/`) | ✅ code-complete | Needs the real image dataset; TF scripts compile-checked, stdlib scripts (split/export/latency-parse) exercised end-to-end |
+| Firmware (`firmware/`) | ⚠️ host-verified | Safety/counting contracts pass; C6 board port, camera choice, peak-RAM proof, real model, radio plan, OTAA keys, ESP-IDF build and hardware smoke remain open |
+| Dashboard (`index.html`) | ✅ live-wired | Separates TTN telemetry from synthetic/reference values, ages stale nodes, exports selected-node CSV, and never sends actuator/config commands |
+| ML pipeline (`ml/`) | ✅ code-complete | Immutable per-class 70/15/15 split, four-class evaluation and float/INT8 comparison are tested; real dataset/TensorFlow run still required |
 | TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
-| Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 10/10 integration tests pass; simulator exercises the full webhook→DB→API chain; Apps Script needs a live deploy to verify |
-| Test & validation (`test/`) | ✅ tested | 14/14 Eq. 2 unit tests + scenario invariants pass on host; servo rig needs bench bring-up with a real servo |
-| Statistical analysis (`analysis/`) | ✅ tested | All five scripts exercised on synthetic data (known outliers caught, TOST detects planted equivalence, battery fit recovers the planted −9 mV/h drain) |
+| Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 22/22 integration tests pass, including retry de-duplication, payload validation, safety surfacing, static allowlist and CSV export |
+| Test & validation (`test/`) | ✅ tested | 30/30 host decision/aggregation/reachability/interlock tests plus scenario invariants pass; servo rig still needs bench bring-up |
+| Statistical analysis (`analysis/`) | ✅ tested | 10/10 contracts cover literal 3×MAD, paired TOST, exact-binomial reliability/false-spray bounds and inferential autonomy |
 
 ## Open risks (carry-over from planning)
 
-1. **TFLite-Micro latency on ESP32-C6** — the cited ~240 ms benchmark was
+1. **ESP32-C6 port and memory** — the reviewed code still targets classic
+   ESP32/WROOM-32 and deliberately rejects a C6 build. Select the exact board,
+   assign valid pins/peripherals, and prove that the frame, 300 KB tensor arena,
+   model/runtime, ROI scratch, drivers and stacks fit available RAM/PSRAM.
+2. **Camera and radio deployment contract** — confirm OV5640 versus OV5642 and
+   the gateway/operator plus locally authorized LoRaWAN plan. Real RF stays
+   disabled while `BG_LORA_PLAN_VERIFIED=0`.
+3. **TFLite-Micro latency on ESP32-C6** — the cited ~240 ms benchmark was
    measured on a dual-core Xtensa ESP32, not the single-core RISC-V C6.
    Retire this risk in Week 4 with `ml/benchmark_latency.py` (host) and the
    on-device timing log parser before committing to the C6.
-2. **ESP-IDF vs Arduino** — belongs in the Week 2 trade-off matrix. Current
+4. **ESP-IDF vs Arduino** — belongs in the Week 2 trade-off matrix. Current
    firmware is ESP-IDF; the servo test rig is Arduino (isolated, no shared
    code, so the choice stays open for the node itself).
-3. **Edge Impulse alternative** — Edge Impulse Studio can replace most of
+5. **Edge Impulse alternative** — Edge Impulse Studio can replace most of
    `ml/`; decide in the Week 2 trade-off doc. The `ml/` scripts are the
    full-control path.
 
 ---
 
 ## Log
+
+### 2026-07-11 — Manuscript-aligned audit, safety fixes, and evidence tooling
+
+- Added the supplied IEEE LaTeX source under `docs/` and a traceability audit
+  that separates verified software from unresolved C6, camera, RAM, radio,
+  calibration, model/key, manuscript-asset, and sample-size gates.
+- Firmware now classifies up to 12 disconnected ROIs per frame, making the
+  strict `N_hat_pest > 5` action condition reachable; expires stale rolling
+  counts on zero/read/clock rollback; treats all three non-negative species as
+  pests; uses tensor quantization parameters; fails init/inference/RF closed;
+  and independently rechecks actuator soil, battery, fault, gap, and daily cap.
+  The 9-byte uplink contract is unchanged and reports the post-actuation result.
+- Backend validates and cross-checks decoded/raw payloads, caps webhook bodies,
+  de-duplicates TTN retries without hiding conflicting evidence, surfaces
+  safety-invariant violations, closes the HEAD allowlist gap, defaults to
+  localhost, adds freshness fields, and exports node-scoped telemetry CSV.
+- Dashboard labels measured, stale, unavailable, simulated, and reference
+  values; removes fabricated live camera/per-class/model/impact claims; switches
+  link and safety state atomically with the selected node; and disables fake
+  live configuration/actuation behavior.
+- ML now freezes an exact per-class split with content hashes, migrates legacy
+  held-out membership, defaults to the three manuscript species plus negative,
+  evaluates any-pest and macro-F1 targets, stratifies INT8 calibration, and
+  compares float/INT8 reports only on an identical test fingerprint.
+- Analysis now produces the paired +/-1 TOST, literal 3×MAD behavior,
+  exact-binomial reliability/false-spray bounds, and a one-sample autonomy test.
+  The exact calculation shows 45 zero-false-spray opportunities cannot prove a
+  <=5% rate at alpha 0.05; at least 59 are required in the zero-event case.
+- **Verify:** backend 22 tests; firmware/decision 30 tests plus scenarios;
+  ML 7 tests; analysis 10 tests; decoder; full Python compile; dashboard inline
+  JavaScript parse. ESP-IDF/TensorFlow/physical hardware remain unavailable.
 
 ### 2026-07-05 — Codex round-2 fixes: timestamp ordering, node-switch staleness
 

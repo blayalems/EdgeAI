@@ -4,6 +4,8 @@
  */
 #include "inference.h"
 
+#include <cmath>
+
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -27,6 +29,7 @@ PestOpResolver *s_resolver;
 
 extern "C" esp_err_t inference_init(void)
 {
+    if (s_interpreter) return ESP_OK;
     if (g_model_data_len < 1024) {
         ESP_LOGE(TAG, "model_data.cc is still the placeholder (%u bytes) — "
                       "regenerate with `xxd -i` from the trained INT8 .tflite",
@@ -71,9 +74,8 @@ extern "C" esp_err_t inference_init(void)
         ESP_LOGE(TAG, "AllocateTensors failed — arena too small?");
         return ESP_FAIL;
     }
-    s_interpreter = &interpreter;
-
-    TfLiteTensor *in = s_interpreter->input(0);
+    TfLiteTensor *in = interpreter.input(0);
+    TfLiteTensor *out = interpreter.output(0);
     if (in->dims->size != 4 ||
         in->dims->data[1] != BG_MODEL_INPUT_H ||
         in->dims->data[2] != BG_MODEL_INPUT_W ||
@@ -82,11 +84,23 @@ extern "C" esp_err_t inference_init(void)
         ESP_LOGE(TAG, "model input shape/type mismatch with app_config.h");
         return ESP_ERR_INVALID_SIZE;
     }
+    if (out->dims->size < 1 ||
+        out->dims->data[out->dims->size - 1] != BG_MODEL_CLASS_COUNT ||
+        out->type != kTfLiteInt8) {
+        ESP_LOGE(TAG, "model output must be INT8 with %d classes",
+                 BG_MODEL_CLASS_COUNT);
+        return ESP_ERR_INVALID_SIZE;
+    }
+    if (in->params.scale <= 0.f || out->params.scale <= 0.f) {
+        ESP_LOGE(TAG, "model has invalid quantization scale");
+        return ESP_ERR_INVALID_ARG;
+    }
 
     ESP_LOGI(TAG, "model loaded: %u bytes, arena used %u/%u KB",
              (unsigned)g_model_data_len,
-             (unsigned)(s_interpreter->arena_used_bytes() / 1024),
+             (unsigned)(interpreter.arena_used_bytes() / 1024),
              BG_TFLM_ARENA_KB);
+    s_interpreter = &interpreter;
     return ESP_OK;
 }
 
@@ -97,11 +111,14 @@ extern "C" esp_err_t inference_run(const uint8_t *rgb888,
 
     TfLiteTensor *in = s_interpreter->input(0);
     const int n = BG_MODEL_INPUT_W * BG_MODEL_INPUT_H * BG_MODEL_INPUT_C;
-    /* Standard image quantization: input scale ≈ 1/255, zero_point ≈ -128,
-     * so int8 = uint8 + zero_point + 128 (== uint8 - 128 for zp = -128). */
+    /* The converter is calibrated in the raw 0..255 pixel domain. Apply the
+     * tensor's actual affine quantizer instead of assuming scale == 1:
+     * q = round(pixel / scale) + zero_point. */
+    if (in->params.scale <= 0.f) return ESP_ERR_INVALID_STATE;
+    const float inv_scale = 1.f / in->params.scale;
     const int32_t zp = in->params.zero_point;
     for (int i = 0; i < n; i++) {
-        int32_t q = (int32_t)rgb888[i] - 128 + (zp + 128);
+        int32_t q = (int32_t)std::round((float)rgb888[i] * inv_scale) + zp;
         if (q < -128) q = -128;
         if (q > 127) q = 127;
         in->data.int8[i] = (int8_t)q;
@@ -130,7 +147,7 @@ extern "C" esp_err_t inference_run(const uint8_t *rgb888,
 
     out->class_id = (uint8_t)best;
     out->confidence_pct = (uint8_t)(conf * 100.f + 0.5f);
-    out->pest = (best == BG_CLASS_PEST) &&
+    out->pest = (best != BG_CLASS_NEGATIVE) &&
                 (out->confidence_pct >= BG_CONF_THRESHOLD_PCT);
 
     ESP_LOGI(TAG, "class=%d conf=%u%% -> %s", best, out->confidence_pct,

@@ -1,7 +1,7 @@
 /**
  * @file lora_telemetry.h
- * @brief LoRaWAN uplink: OTAA join, US915 sub-band 2, SF10, compact binary
- *        payload.
+ * @brief LoRaWAN uplink: OTAA join, deployment-verified regional plan,
+ *        compact binary payload.
  *
  * Uplink payload v1 — 9 bytes, big-endian, FPort BG_LORA_FPORT:
  *
@@ -15,8 +15,9 @@
  *   7       1     action code (bg_action_t)
  *   8       1     sprays_today
  *
- * At SF10/125 kHz a 9-byte FRMPayload keeps time-on-air ≈ 290 ms, inside
- * duty-cycle and TTN fair-use budgets at 30-min cycles.
+ * The prototype settings request US915 sub-band 2 at SF10, but real RF
+ * initialization remains blocked until BG_LORA_PLAN_VERIFIED is set after
+ * confirming the gateway/operator plan and local authorization.
  *
  * Implementation: uses the ttn-esp32 component when present (detected via
  * __has_include("ttn.h")); otherwise compiles a stub that logs the exact

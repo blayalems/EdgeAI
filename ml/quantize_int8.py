@@ -16,24 +16,83 @@ Then:   python evaluate.py DATA_ROOT --model exports/pest_mnv2_int8.tflite
 """
 import argparse
 import csv
-import random
+import hashlib
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
-import tensorflow as tf
 
 import bg_config as cfg
+from split_dataset import FrozenDatasetError, verify_frozen_dataset
 
 HERE = Path(__file__).parent
+
+
+def select_representative_rows(rows, samples: int):
+    """Select a deterministic, proportionally stratified calibration sample."""
+    if samples <= 0:
+        raise ValueError("representative sample count must be positive")
+    if not rows:
+        raise ValueError("training manifest is empty")
+    groups = defaultdict(list)
+    for row in rows:
+        try:
+            label = int(row["label"])
+            class_name = row["class_name"]
+            path = row["path"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("invalid training-manifest row") from exc
+        groups[(label, class_name)].append(row)
+
+    n = min(samples, len(rows))
+    if n < len(groups):
+        raise ValueError(
+            f"{n} calibration samples cannot cover {len(groups)} classes; "
+            "increase --samples"
+        )
+    ideal = {key: n * len(group) / len(rows) for key, group in groups.items()}
+    counts = {key: 1 for key in groups}
+    while sum(counts.values()) < n:
+        candidates = [key for key, group in groups.items()
+                      if counts[key] < len(group)]
+        key = max(candidates, key=lambda item: (ideal[item] - counts[item],
+                                                -item[0], item[1]))
+        counts[key] += 1
+
+    selected_by_class = {}
+    for key, group in groups.items():
+        ordered = sorted(group, key=lambda row: hashlib.sha256(
+            f"{cfg.SEED}\0{row['path']}".encode("utf-8")).hexdigest())
+        selected_by_class[key] = ordered[:counts[key]]
+
+    # Interleave classes so converter calibration is not ordered in long blocks.
+    selected = []
+    max_count = max(map(len, selected_by_class.values()))
+    for index in range(max_count):
+        for key in sorted(selected_by_class):
+            group = selected_by_class[key]
+            if index < len(group):
+                selected.append(group[index])
+    return selected
 
 
 def rep_dataset(data_root: Path, samples: int):
     with open(HERE / cfg.SPLITS_DIR / "train.csv", newline="") as f:
         rows = list(csv.DictReader(f))
-    random.Random(cfg.SEED).shuffle(rows)
+    rows = select_representative_rows(rows, samples)
+    counts = defaultdict(int)
+    for row in rows:
+        counts[row["class_name"]] += 1
+    print("calibration set: " + ", ".join(
+        f"{name}={count}" for name, count in sorted(counts.items())
+    ))
 
     def gen():
-        for r in rows[:samples]:
+        try:
+            import tensorflow as tf
+        except ImportError as exc:
+            raise RuntimeError("TensorFlow is required for quantization") from exc
+        for r in rows:
             raw = tf.io.decode_image(
                 tf.io.read_file(str(data_root / r["path"])),
                 channels=cfg.INPUT_C, expand_animations=False)
@@ -51,6 +110,16 @@ def main():
     ap.add_argument("--samples", type=int, default=200)
     args = ap.parse_args()
 
+    try:
+        verify_frozen_dataset(args.data_root)
+    except FrozenDatasetError as exc:
+        raise SystemExit(f"error: {exc}") from exc
+
+    try:
+        import tensorflow as tf
+    except ImportError as exc:
+        raise SystemExit("TensorFlow is required; install ml/requirements.txt") from exc
+
     model = tf.keras.models.load_model(args.model)
     conv = tf.lite.TFLiteConverter.from_keras_model(model)
     conv.optimizations = [tf.lite.Optimize.DEFAULT]
@@ -61,6 +130,7 @@ def main():
     blob = conv.convert()
 
     out = HERE / cfg.EXPORTS_DIR / "pest_mnv2_int8.tflite"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(blob)
 
     interp = tf.lite.Interpreter(model_content=blob)

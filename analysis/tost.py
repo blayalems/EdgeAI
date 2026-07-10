@@ -29,37 +29,68 @@ from scipy import stats
 def _one_sided_ps(diff_mean, se, df, delta):
     t_lower = (diff_mean + delta) / se   # H0: diff <= -delta
     t_upper = (diff_mean - delta) / se   # H0: diff >= +delta
-    p1 = 1.0 - stats.t.cdf(t_lower, df)
+    p1 = stats.t.sf(t_lower, df)
     p2 = stats.t.cdf(t_upper, df)
-    return max(p1, p2)
+    return float(max(p1, p2))
+
+
+def _validate_settings(delta, alpha):
+    if not np.isfinite(delta) or delta <= 0:
+        raise ValueError("delta must be a finite positive equivalence margin")
+    if not np.isfinite(alpha) or not 0 < alpha < 0.5:
+        raise ValueError("alpha must lie strictly between 0 and 0.5")
+
+
+def _sample(values, name):
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 1 or len(values) < 2:
+        raise ValueError(f"{name} must contain at least two observations")
+    if not np.isfinite(values).all():
+        raise ValueError(f"{name} contains a missing or non-finite value")
+    return values
+
+
+def _degenerate_result(diff_mean, delta):
+    # With no estimated variation the CI collapses to the observed difference.
+    # Boundary equality is not evidence that the CI lies strictly inside.
+    p = 0.0 if abs(diff_mean) < delta else 1.0
+    return p, (float(diff_mean), float(diff_mean))
 
 
 def tost_ind(a, b, delta, alpha=0.05):
     """Independent-sample (Welch) TOST. Returns (p, (ci_lo, ci_hi)) where
     the CI is the (1-2*alpha) interval used for the equivalence decision:
     equivalence at level alpha iff the CI lies inside (-delta, +delta)."""
-    a, b = np.asarray(a, float), np.asarray(b, float)
+    _validate_settings(delta, alpha)
+    a, b = _sample(a, "sample a"), _sample(b, "sample b")
     va, vb = a.var(ddof=1), b.var(ddof=1)
     na, nb = len(a), len(b)
     se = math.sqrt(va / na + vb / nb)
+    d = float(a.mean() - b.mean())
+    if se == 0.0:
+        return _degenerate_result(d, delta)
     df = (va / na + vb / nb) ** 2 / (
         (va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1))
-    d = a.mean() - b.mean()
     p = _one_sided_ps(d, se, df, delta)
     tcrit = stats.t.ppf(1 - alpha, df)
-    return p, (d - tcrit * se, d + tcrit * se)
+    return p, (float(d - tcrit * se), float(d + tcrit * se))
 
 
 def tost_paired(a, b, delta, alpha=0.05):
-    a, b = np.asarray(a, float), np.asarray(b, float)
+    _validate_settings(delta, alpha)
+    a, b = _sample(a, "sample a"), _sample(b, "sample b")
     if len(a) != len(b):
         raise ValueError("paired TOST needs equal-length samples")
     diff = a - b
     n = len(diff)
     se = diff.std(ddof=1) / math.sqrt(n)
-    p = _one_sided_ps(diff.mean(), se, n - 1, delta)
+    diff_mean = float(diff.mean())
+    if se == 0.0:
+        return _degenerate_result(diff_mean, delta)
+    p = _one_sided_ps(diff_mean, se, n - 1, delta)
     tcrit = stats.t.ppf(1 - alpha, n - 1)
-    return p, (diff.mean() - tcrit * se, diff.mean() + tcrit * se)
+    return p, (float(diff_mean - tcrit * se),
+               float(diff_mean + tcrit * se))
 
 
 def main():

@@ -16,7 +16,7 @@ static const char *TAG = "lora";
 
 int lora_encode(const bg_uplink_t *u, uint8_t *buf, int cap)
 {
-    if (cap < BG_UPLINK_LEN) return -1;
+    if (!u || !buf || cap < BG_UPLINK_LEN) return -1;
     buf[0] = BG_UPLINK_VERSION;
     buf[1] = (uint8_t)(u->n_pest >> 8);
     buf[2] = (uint8_t)(u->n_pest);
@@ -44,10 +44,16 @@ int lora_encode(const bg_uplink_t *u, uint8_t *buf, int cap)
 /* Real stack: ttn-esp32 (LoRaMAC-node port) driving an SX1276.        */
 /* ------------------------------------------------------------------ */
 #include "ttn.h"
+#include "driver/gpio.h"
 #include "driver/spi_common.h"
 
 esp_err_t lora_init(void)
 {
+#if !BG_LORA_PLAN_VERIFIED
+    ESP_LOGE(TAG, "RF disabled: verify the gateway/operator frequency plan "
+                  "and set BG_LORA_PLAN_VERIFIED=1");
+    return ESP_ERR_INVALID_STATE;
+#endif
     spi_bus_config_t bus = {
         .sclk_io_num = BG_PIN_LORA_SPI_SCLK,
         .miso_io_num = BG_PIN_LORA_SPI_MISO,
@@ -55,6 +61,10 @@ esp_err_t lora_init(void)
         .quadwp_io_num = -1, .quadhd_io_num = -1,
     };
     esp_err_t err = spi_bus_initialize(SPI3_HOST, &bus, SPI_DMA_CH_AUTO);
+    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) return err;
+
+    /* ttn-esp32 requires the GPIO ISR service before pin configuration. */
+    err = gpio_install_isr_service(0);
     if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) return err;
 
     ttn_init();
@@ -68,10 +78,16 @@ esp_err_t lora_init(void)
     ttn_set_adr_enabled(false);
 
     if (!ttn_resume_after_deep_sleep()) {
-        ttn_provision(BG_LORA_DEV_EUI, BG_LORA_APP_EUI, BG_LORA_APP_KEY);
-        ESP_LOGI(TAG, "OTAA join (timeout %d s)...", BG_LORA_JOIN_TIMEOUT_S);
+        if (!ttn_provision(BG_LORA_DEV_EUI, BG_LORA_APP_EUI,
+                           BG_LORA_APP_KEY)) {
+            ESP_LOGE(TAG, "OTAA provisioning failed");
+            ttn_shutdown();
+            return ESP_ERR_INVALID_ARG;
+        }
+        ESP_LOGI(TAG, "OTAA join...");
         if (!ttn_join()) {
             ESP_LOGE(TAG, "join failed");
+            ttn_shutdown();
             return ESP_FAIL;
         }
     }
@@ -86,11 +102,13 @@ esp_err_t lora_send(const bg_uplink_t *u)
     if (len < 0) return ESP_ERR_INVALID_SIZE;
 
     ttn_response_code_t rc = ttn_transmit_message(buf, len, BG_LORA_FPORT, false);
+    /* Put the radio/stack into their sleep state on both success and failure;
+     * leaving an external transceiver awake defeats the autonomy target. */
+    ttn_prepare_for_deep_sleep();
     if (rc != TTN_SUCCESSFUL_TRANSMISSION) {
         ESP_LOGE(TAG, "uplink failed (%d)", rc);
         return ESP_FAIL;
     }
-    ttn_prepare_for_deep_sleep();
     ESP_LOGI(TAG, "uplink sent (%d bytes, SF%d)", len, BG_LORA_SF);
     return ESP_OK;
 }

@@ -56,6 +56,11 @@ class FaultsDominate(unittest.TestCase):
             ev(n_pest=0, soil_safe=False, soil_fault=True, camera_fault=True),
             (Action.FAULT, Reason.CAMERA_FAULT))
 
+    def test_actuator_init_fault_wins(self):
+        self.assertEqual(
+            ev(n_pest=100, soil_safe=True, actuator_fault=True),
+            (Action.FAULT, Reason.ACTUATION_FAULT))
+
 
 class SafetyLockouts(unittest.TestCase):
     def test_daily_cap(self):
@@ -102,22 +107,23 @@ class ExhaustiveInvariants(unittest.TestCase):
         sprays = [0, 1, BG_MAX_SPRAYS_PER_DAY - 1, BG_MAX_SPRAYS_PER_DAY]
         bools = [False, True]
         count = 0
-        for (n, safe, sf, cf, mv, st, gap) in itertools.product(
-                n_pests, bools, bools, bools, batts, sprays, gaps):
+        for (n, safe, sf, cf, af, mv, st, gap) in itertools.product(
+                n_pests, bools, bools, bools, bools, batts, sprays, gaps):
             action, _ = ev(n_pest=n, soil_safe=safe, soil_fault=sf,
-                           camera_fault=cf, batt_mv=mv, sprays_today=st,
+                           camera_fault=cf, actuator_fault=af,
+                           batt_mv=mv, sprays_today=st,
                            min_since_last_spray=gap)
             count += 1
             if action is Action.SPRAY:
                 # Invariant 1: SPRAY implies Eq. 2 and no inhibitor.
                 self.assertTrue(n > BG_N_EIL and safe and not sf and not cf
                                 and mv >= BG_BATT_MIN_SPRAY_MV
-                                and st < BG_MAX_SPRAYS_PER_DAY
+                                and not af and st < BG_MAX_SPRAYS_PER_DAY
                                 and gap >= BG_SPRAY_MIN_GAP_MIN)
-            if sf or cf:
+            if sf or cf or af:
                 # Invariant 2: any fault implies never SPRAY.
                 self.assertIs(action, Action.FAULT)
-        self.assertEqual(count, len(n_pests) * 2 ** 3 * len(batts)
+        self.assertEqual(count, len(n_pests) * 2 ** 4 * len(batts)
                          * len(sprays) * len(gaps))
 
 

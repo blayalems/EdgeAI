@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """3xMAD outlier filter (pre-registered cleaning rule for all field data).
 
-A sample x is an outlier iff |x - median| > 3 * 1.4826 * MAD, where
-1.4826 scales MAD to the sigma of a normal distribution. Median/MAD are
-robust (up to 50% breakdown), unlike mean/std which an outlier drags.
+A sample x is an outlier iff |x - median| > 3 * MAD, matching the
+pre-registered manuscript rule exactly. An optional normal-consistency scale
+(1.4826 * MAD) is available for other analyses but is never implicit.
 
 Library use:
     from mad_filter import mad_mask
@@ -21,17 +21,26 @@ MAD_TO_SIGMA = 1.4826
 K = 3.0
 
 
-def mad_mask(x, k: float = K):
+def mad_mask(x, k: float = K, normal_consistency: bool = False):
     """Boolean mask over x: True where the value is NOT a 3xMAD outlier.
-    NaNs are marked False (dropped)."""
+    NaNs/infinities are marked False (dropped)."""
+    if not np.isfinite(k) or k <= 0:
+        raise ValueError("k must be a finite positive number")
     x = np.asarray(x, dtype=float)
-    ok = ~np.isnan(x)
+    if x.ndim != 1:
+        raise ValueError("mad_mask expects a one-dimensional sample")
+    ok = np.isfinite(x)
+    if not ok.any():
+        return np.zeros(x.shape, dtype=bool)
     med = np.median(x[ok])
     mad = np.median(np.abs(x[ok] - med))
     if mad == 0.0:
-        # Degenerate (>=50% identical values): fall back to exact-match keep
-        return ok & (x == med) if (x[ok] == med).all() else ok
-    lim = k * MAD_TO_SIGMA * mad
+        # The literal k*MAD threshold is zero. Keeping all finite values here
+        # would let an arbitrarily large spike survive whenever >=50% of the
+        # log is identical.
+        return ok & (x == med)
+    scale = MAD_TO_SIGMA if normal_consistency else 1.0
+    lim = k * scale * mad
     return ok & (np.abs(x - med) <= lim)
 
 
@@ -41,10 +50,15 @@ def main():
     ap.add_argument("--col", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("-k", type=float, default=K)
+    ap.add_argument(
+        "--normal-consistency", action="store_true",
+        help="use 1.4826*MAD as a normal-distribution sigma estimate; omit "
+             "to apply the manuscript's literal k*MAD rule",
+    )
     args = ap.parse_args()
 
     df = pd.read_csv(args.csv)
-    keep = mad_mask(df[args.col], args.k)
+    keep = mad_mask(df[args.col], args.k, args.normal_consistency)
     dropped = df.loc[~keep, args.col]
     df[keep].to_csv(args.out, index=False)
     print(f"{len(df)} rows -> kept {int(keep.sum())}, "

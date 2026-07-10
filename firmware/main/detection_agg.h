@@ -7,16 +7,17 @@
  *
  *  - The window is BG_AGG_WINDOW_MIN minutes, quantized into
  *    BG_AGG_BUCKET_COUNT buckets of BG_AGG_BUCKET_SEC seconds.
- *  - Each bucket stores {bucket_index, count} where bucket_index =
+ *  - Each bucket stores {valid, bucket_index, count} where bucket_index =
  *    unix_seconds / BG_AGG_BUCKET_SEC. The ESP32 RTC keeps the system
  *    clock running through deep sleep, so bucket indices stay comparable
  *    across wake cycles without an external RTC.
  *  - State lives in RTC_DATA_ATTR memory guarded by MAGIC + CRC32:
  *      * deep-sleep wake  -> magic+CRC valid -> state carries over;
  *      * power loss/brownout/flash of new fw -> guard fails -> counter
- *        resets to 0 (documented behaviour: after a cold boot the node
- *        needs one full window to re-accumulate before it can spray).
- *  - On every read, buckets whose index is older than
+ *        resets to 0 (after a cold boot, only post-boot classifications can
+ *        contribute to a spray decision).
+ *  - On every add or read (including a zero-detection wake), buckets whose
+ *    index is older than
  *    (now_bucket - BG_AGG_BUCKET_COUNT + 1) are expired to zero, so
  *    N̂_pest is always the sum over exactly the trailing window even if
  *    the node overslept (e.g. 45-min contingency cycle).

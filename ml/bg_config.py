@@ -9,14 +9,22 @@ INPUT_W = 96
 INPUT_H = 96
 INPUT_C = 3
 
-# MIRROR of BG_CLASS_NEGATIVE / BG_CLASS_PEST: class 0 must be the
-# negative (background / not-a-pest) class, class 1 the banana weevil.
-# Extra pest classes may be appended AFTER these two, but the firmware
-# only sprays on class index 1.
-CLASS_NAMES = ["negative", "weevil"]
+# Manuscript strata. Class 0 is always the negative/background class; every
+# non-zero label is a target pest. Folder slugs can be overridden with
+# split_dataset.py --classes for an existing/custom dataset.
+CLASS_NAMES = [
+    "negative",
+    "thrips_hawaiiensis",
+    "erionota_thrax",
+    "pentalonia_nigronervosa",
+]
 
 # MIRROR of BG_CONF_THRESHOLD_PCT (60 %)
 CONF_THRESHOLD = 0.60
+
+# Objective-I acceptance criterion: macro (unweighted mean per-class) F1 on
+# the frozen held-out test set.
+MEAN_F1_TARGET = 0.85
 
 # Split fractions. The test fraction is FROZEN by split_dataset.py: once a
 # file lands in the test manifest it never leaves it.

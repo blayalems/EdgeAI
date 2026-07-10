@@ -1,7 +1,7 @@
 """Host-side mirror of firmware/main/decision_engine.c — line for line.
 
 Eq. 2:  spray ⟺ (N̂_pest > N_EIL) ∧ Soil_safe
-evaluated in strict priority order: faults > Eq. 2 gate > safety
+evaluated in strict priority order: sensor/actuator faults > Eq. 2 gate > safety
 lockouts > spray.
 
 If decision_engine.c changes, this file and its tests change in the same
@@ -38,6 +38,8 @@ class Reason(Enum):
     SOIL_FAULT = "soil_fault"
     CAMERA_FAULT = "camera_fault"
     LOW_BATTERY = "low_battery"
+    ACTUATION_REFUSED = "actuation_refused"
+    ACTUATION_FAULT = "actuation_fault"
 
 
 @dataclass
@@ -46,6 +48,7 @@ class DecisionIn:
     soil_safe: bool
     soil_fault: bool = False
     camera_fault: bool = False
+    actuator_fault: bool = False
     batt_mv: int = 4000
     sprays_today: int = 0
     min_since_last_spray: int = UINT32_MAX
@@ -57,6 +60,8 @@ def decision_evaluate(inp: DecisionIn) -> tuple[Action, Reason]:
         return Action.FAULT, Reason.CAMERA_FAULT
     if inp.soil_fault:
         return Action.FAULT, Reason.SOIL_FAULT
+    if inp.actuator_fault:
+        return Action.FAULT, Reason.ACTUATION_FAULT
 
     # 2. Eq. 2.
     if inp.n_pest <= BG_N_EIL:
