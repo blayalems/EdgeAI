@@ -1,6 +1,12 @@
 /**
  * BananaGuard — TTN webhook → Google Sheets (lowest-code cloud log).
  *
+ * LEGACY / NON-EVIDENTIARY HELPER. This script does not implement the
+ * authenticated provenance, strict validation, source timestamps, schema
+ * migrations, or durable retry de-duplication required by Actual mode. Its
+ * rows must never be labelled field evidence or imported into Actual. Use
+ * backend/server.py for the authoritative contract.
+ *
  * Setup (once, ~5 minutes, zero infrastructure):
  *  1. sheets.new → name the spreadsheet "BananaGuard log".
  *  2. Extensions → Apps Script → paste this file → Deploy → New deployment
@@ -10,7 +16,8 @@
  *  4. (Optional) add ?token=YOURSECRET to the webhook URL and set the same
  *     value in TOKEN below.
  *
- * One row per uplink. Uses decoded_payload from decoder/
+ * One convenience row per delivery (webhook retries may duplicate it). Uses
+ * decoded_payload from decoder/
  * ttn_payload_decoder.js when present, else decodes frm_payload here
  * (same 9-byte v1 contract as firmware/main/lora_telemetry.h).
  */

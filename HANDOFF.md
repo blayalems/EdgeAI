@@ -8,10 +8,11 @@ how to verify it, what is still open.
 | Component | Status | Notes |
 |---|---|---|
 | Firmware (`firmware/`) | ⚠️ host-verified | Safety/counting contracts pass; C6 board port, camera choice, peak-RAM proof, real model, radio plan, OTAA keys, ESP-IDF build and hardware smoke remain open |
-| Dashboard (`index.html`) | ✅ live-wired | Separates TTN telemetry from synthetic/reference values, ages stale nodes, exports selected-node CSV, and never sends actuator/config commands |
+| Dashboard (`index.html`) | ✅ mode-separated | Explicit Demo and Actual data modes use isolated stores; Actual accepts only compatible read-only `field` telemetry, exposes setup/empty/fresh/stale/error states, and never sends actuator/config commands |
 | ML pipeline (`ml/`) | ✅ code-complete | Immutable per-class 70/15/15 split, four-class evaluation and float/INT8 comparison are tested; real dataset/TensorFlow run still required |
 | TTN decoder (`decoder/`) | ✅ tested | `node decoder/test_decoder.js` passes; paste into TTN console when the application exists |
-| Backend + cloud log (`backend/`, `cloud/`) | ✅ tested | 22/22 integration tests pass, including retry de-duplication, payload validation, safety surfacing, static allowlist and CSV export |
+| Backend (`backend/`) | ✅ tested | 39/39 integration tests cover authenticated field ingest, simulator isolation, migrations, source-scoped retry de-duplication, timestamps, safety surfacing, static allowlist and CSV export |
+| Sheets helper (`cloud/`) | ⚠️ legacy demo | Low-code convenience log only; it lacks the provenance, validation and durable de-duplication required for Actual or research evidence |
 | Test & validation (`test/`) | ✅ tested | 30/30 host decision/aggregation/reachability/interlock tests plus scenario invariants pass; servo rig still needs bench bring-up |
 | Statistical analysis (`analysis/`) | ✅ tested | 10/10 contracts cover literal 3×MAD, paired TOST, exact-binomial reliability/false-spray bounds and inferential autonomy |
 
@@ -38,6 +39,41 @@ how to verify it, what is still open.
 ---
 
 ## Log
+
+Historical entries below preserve the terminology used at the time. The
+current component table and newest entry supersede earlier `LIVE`, simulator,
+deployment, and test-count claims.
+
+### 2026-07-13 — Explicit Demo/Actual modes and provenance-safe distribution
+
+- Dashboard data provenance is now an explicit operator choice. Demo remains
+  fully synthetic and makes no API requests; Actual performs a versioned,
+  read-only capability handshake, requires configured authenticated field
+  ingest, queries only `source=field`, isolates its cache, and never falls back
+  to simulated values. Setup, connecting, empty, fresh, stale, paused, and
+  error states remain visible, with payload-unavailable cards suppressed.
+- Backend schema v4 records `field`, `simulator`, or `legacy_unknown`
+  provenance, preserves historical rows without guessing, scopes webhook retry
+  keys by source, adds operator-managed node metadata, requires an
+  offset-bearing field timestamp, TTS application ID/frame counter, and a
+  webhook token of at least 32 bytes, exposes `/api/meta`, and
+  keeps the built-in viewer loopback-only/read-only. Completed spray reports
+  and wet-soil treatment holds no longer imply a currently active actuator.
+- The deterministic standalone builder embeds the exact canonical inputs,
+  commit/tree build identity, vendored offline fonts, and their complete
+  third-party notices. Its checker rejects stale source inputs and legacy
+  misleading labels. Pages, Windows, Android, and standalone workflows carry
+  the same dashboard font/license assets; Android also embeds its pinned
+  Capacitor/Gradle inventory, and the Windows distribution carries CPython and
+  PyInstaller notices. The current APK remains explicitly Demo-only.
+- Deployment and mode contracts are documented in `docs/dashboard_modes.md`,
+  while backend/cloud guidance no longer recommends exposing the unauthenticated
+  viewer API. Actual connectivity remains separate from physical field
+  readiness; all unresolved C6/model/RF/calibration/bench gates remain open.
+- **Verify with:** `python backend/test_backend.py`; decoder, decision/scenario,
+  ML, and analysis suites; `npm run test:standalone`; two identical standalone
+  builds plus `npm run check:standalone`; `npm run test:browser`; full Python
+  compile; workflow YAML parse; `npm audit`; and `git diff --check`.
 
 ### 2026-07-11 — Manuscript-aligned audit, safety fixes, and evidence tooling
 

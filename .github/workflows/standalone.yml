@@ -1,0 +1,86 @@
+# Builds the source-identifiable, fully offline HTML distribution. The parity
+# checker rejects stale inputs and legacy labels that could imply demo values
+# came from field hardware.
+name: Build standalone dashboard
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - index.html
+      - support.js
+      - Ring.dc.html
+      - LICENSE
+      - vendor/**
+      - assets/**
+      - tools/build_standalone.py
+      - tools/check_standalone.py
+      - test/dashboard_smoke.mjs
+      - test/test_standalone_tools.py
+      - backend/server.py
+      - package.json
+      - package-lock.json
+      - .github/workflows/standalone.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  standalone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install browser test dependency
+        run: npm ci --ignore-scripts
+
+      - name: Test standalone tooling
+        run: npm run test:standalone
+
+      - name: Build and verify deterministic standalone
+        run: |
+          npm run build:standalone
+          cp dist/BananaGuard-Standalone.html /tmp/BananaGuard-Standalone.first.html
+          npm run build:standalone
+          cmp /tmp/BananaGuard-Standalone.first.html dist/BananaGuard-Standalone.html
+          npm run check:standalone
+          test -s LICENSE
+          test -s vendor/LICENSES.txt
+          test -s vendor/fonts/LICENSES.txt
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser, responsive, offline, and mode-isolation smoke
+        run: npm run test:browser
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BananaGuard-standalone-${{ github.sha }}
+          path: dist/BananaGuard-Standalone.html
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: standalone
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: BananaGuard-standalone-${{ github.sha }}
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/BananaGuard-Standalone.html

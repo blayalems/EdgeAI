@@ -1,0 +1,13 @@
+{
+  "name": "bananaguard-dashboard-ci",
+  "private": true,
+  "scripts": {
+    "build:standalone": "python tools/build_standalone.py",
+    "check:standalone": "python tools/check_standalone.py",
+    "test:standalone": "python -m unittest discover -s test -p test_standalone_tools.py -v",
+    "test:browser": "node test/dashboard_smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1"
+  }
+}

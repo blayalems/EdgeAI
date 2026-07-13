@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <div style="position:relative;width:{{ size }}px;height:{{ size }}px;display:grid;place-items:center;flex:0 0 auto;">
-  <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 120 120" style="transform:rotate(-90deg);overflow:visible;">
+  <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 120 120" aria-hidden="true" focusable="false" style="transform:rotate(-90deg);overflow:visible;">
     <circle cx="60" cy="60" r="{{ r }}" fill="none" stroke="{{ track }}" stroke-width="{{ thickness }}" stroke-linecap="round"></circle>
     <circle cx="60" cy="60" r="{{ r }}" fill="none" stroke="{{ color }}" stroke-width="{{ thickness }}" stroke-linecap="round" stroke-dasharray="{{ dash }}" style="transition:stroke-dasharray .8s cubic-bezier(.2,.9,.2,1);filter:drop-shadow(0 0 7px {{ glow }});"></circle>
   </svg>

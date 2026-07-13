@@ -15,12 +15,15 @@ on:
       - index.html
       - support.js
       - Ring.dc.html
+      - LICENSE
       - vendor/**
+      - assets/**
+      - packaging/windows/**
       - .github/workflows/windows-exe.yml
   workflow_dispatch:
 
 permissions:
-  contents: write # release upload on tags
+  contents: read
 
 jobs:
   exe:
@@ -29,22 +32,42 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.10"
 
       - name: Run backend tests first
         run: python backend/test_backend.py
 
       - name: Install PyInstaller
-        run: pip install pyinstaller
+        run: python -m pip install pyinstaller==6.21.0
+
+      - name: Record Windows runtime and build-tool notices
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path windows-notices -Force | Out-Null
+          $pythonRoot = Split-Path -Parent (Get-Command python).Source
+          Copy-Item -LiteralPath (Join-Path $pythonRoot 'LICENSE.txt') -Destination windows-notices/PYTHON-LICENSE.txt
+          python -c "import importlib.metadata as m, pathlib, shutil; d=m.distribution('pyinstaller'); f=next(x for x in (d.files or []) if str(x).replace('\\','/').endswith('/licenses/COPYING.txt')); shutil.copyfile(d.locate_file(f), pathlib.Path('windows-notices/PYINSTALLER-COPYING.txt'))"
+          python -m pip list --format=freeze | Out-File -Encoding utf8NoBOM windows-notices/PYTHON-BUILD-INVENTORY.txt
+          Copy-Item -LiteralPath packaging/windows/README.md -Destination windows-notices/PACKAGING-README.md
+          python -c "import PyInstaller; assert PyInstaller.__version__ == '6.21.0', PyInstaller.__version__"
+          Get-ChildItem windows-notices | ForEach-Object { if ($_.Length -eq 0) { throw "$($_.Name) is empty" } }
 
       - name: Build single-file exe (server + dashboard bundled)
-        run: >
-          pyinstaller --onefile --name BananaGuard
-          --add-data "index.html;."
-          --add-data "support.js;."
-          --add-data "Ring.dc.html;."
-          --add-data "vendor;vendor"
-          backend/server.py
+        shell: pwsh
+        run: |
+          $bundleArgs = @(
+            '--onefile', '--name', 'BananaGuard',
+            '--add-data', 'index.html;.',
+            '--add-data', 'support.js;.',
+            '--add-data', 'Ring.dc.html;.',
+            '--add-data', 'LICENSE;.',
+            '--add-data', 'vendor;vendor'
+          )
+          if (Test-Path -LiteralPath assets) {
+            $bundleArgs += @('--add-data', 'assets;assets')
+          }
+          $bundleArgs += 'backend/server.py'
+          pyinstaller @bundleArgs
 
       - name: Smoke test the exe
         shell: pwsh
@@ -55,7 +78,7 @@ jobs:
           Start-Sleep -Seconds 8
           $failed = $false
           try {
-            foreach ($u in '/api/health','/index.html','/vendor/react.production.min.js','/vendor/react-dom.production.min.js') {
+            foreach ($u in '/api/health','/index.html','/LICENSE','/vendor/LICENSES.txt','/vendor/react.production.min.js','/vendor/react-dom.production.min.js','/vendor/fonts/fonts.css','/vendor/fonts/manrope-latin.woff2','/vendor/fonts/space-grotesk-latin.woff2','/vendor/fonts/material-symbols-rounded.woff2','/vendor/fonts/LICENSES.txt') {
               $r = Invoke-WebRequest "http://localhost:8123$u" -UseBasicParsing
               Write-Host "$u -> $($r.StatusCode) ($($r.RawContentLength) bytes)"
               if ($r.StatusCode -ne 200) { $failed = $true }
@@ -71,13 +94,31 @@ jobs:
           if ($failed) { Write-Error "smoke test failed"; exit 1 }
           Write-Host "exe serves API + dashboard OK"
 
+      - name: Prepare Windows distribution
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path release-windows -Force | Out-Null
+          Copy-Item -LiteralPath dist/BananaGuard.exe -Destination release-windows/BananaGuard.exe
+          Copy-Item -Path windows-notices/*.txt -Destination release-windows/
+          Copy-Item -LiteralPath windows-notices/PACKAGING-README.md -Destination release-windows/
+
       - uses: actions/upload-artifact@v4
         with:
           name: BananaGuard-windows
-          path: dist/BananaGuard.exe
+          path: release-windows/*
 
-      - name: Attach to release (tags only)
-        if: startsWith(github.ref, 'refs/tags/')
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: exe
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: BananaGuard-windows
+          path: dist
+      - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/BananaGuard.exe
+          files: dist/*
