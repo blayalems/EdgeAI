@@ -1,7 +1,6 @@
 # Publishes the dashboard to GitHub Pages. One-time repo setup:
 # Settings -> Pages -> Source: "GitHub Actions".
-# On Pages there is no backend, so the dashboard runs in LIVE-SIM demo
-# mode — exactly what a public showcase needs.
+# On Pages there is no backend, so the dashboard defaults explicitly to Demo.
 name: Deploy dashboard to GitHub Pages
 
 on:
@@ -11,7 +10,11 @@ on:
       - index.html
       - support.js
       - Ring.dc.html
+      - LICENSE
       - vendor/**
+      - assets/**
+      - tools/build_standalone.py
+      - tools/check_standalone.py
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -32,11 +35,28 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and verify downloadable standalone
+        run: |
+          python tools/build_standalone.py
+          python tools/check_standalone.py
       - name: Assemble static site (dashboard files only)
         run: |
           mkdir _site
           cp index.html support.js Ring.dc.html _site/
+          cp LICENSE _site/LICENSE
           cp -r vendor _site/vendor
+          if [ -d assets ]; then cp -r assets _site/assets; fi
+          cp dist/BananaGuard-Standalone.html _site/
+          test -s _site/vendor/fonts/fonts.css
+          test -s _site/vendor/fonts/manrope-latin.woff2
+          test -s _site/vendor/fonts/space-grotesk-latin.woff2
+          test -s _site/vendor/fonts/material-symbols-rounded.woff2
+          test -s _site/LICENSE
+          test -s _site/vendor/LICENSES.txt
+          test -s _site/vendor/fonts/LICENSES.txt
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

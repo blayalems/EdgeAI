@@ -1,0 +1,28 @@
+/*
+ * Offline dashboard typography. These Latin subsets are vendored so the
+ * dashboard, standalone bundle, Windows executable, and APK do not depend on
+ * Google Fonts at runtime.
+ */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("./manrope-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./space-grotesk-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Material Symbols Rounded";
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url("./material-symbols-rounded.woff2") format("woff2");
+}

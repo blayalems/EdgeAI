@@ -1,0 +1,56 @@
+BananaGuard vendored JavaScript notices and licenses
+=====================================================
+
+The dashboard redistributes the following unmodified production bundles.
+The SHA-256 values identify the exact files in this distribution.
+
+React 18.3.1 (react.production.min.js)
+SHA-256: d72610e728466bf70f27ecc9a1a14580fd8f1e75b977aa0612146cab0e80a3fe
+Embedded notice:
+@license React
+react.production.min.js
+Copyright (c) Facebook, Inc. and its affiliates.
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+ReactDOM 18.3.1-next-f1338f8080-20240426 (react-dom.production.min.js)
+SHA-256: 13b1c0705b9fa93346936ed98bd4a858fea4cdacdb09e564f897c5ba6bd0943a
+Embedded notices:
+@license React
+react-dom.production.min.js
+Copyright (c) Facebook, Inc. and its affiliates.
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+Modernizr 3.0.0pre (Custom Build) | MIT
+The Modernizr notice identifies the feature-detection code incorporated in
+the ReactDOM production bundle. Copyright (c) 2009-2018 The Modernizr Team.
+
+Upstream license sources:
+https://unpkg.com/react@18.3.1/LICENSE
+https://unpkg.com/react-dom@18.3.1/LICENSE
+https://modernizr.com/license/
+
+
+MIT License
+
+Copyright (c) Facebook, Inc. and its affiliates.
+Copyright (c) 2009-2018 The Modernizr Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
