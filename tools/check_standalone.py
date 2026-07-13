@@ -50,9 +50,11 @@ EXPECTED_FONT_SHA256 = {
 # Hash after CRLF/CR normalization. This pins the exact notices and complete
 # OFL 1.1 + Apache 2.0 texts while remaining stable across Git checkouts.
 EXPECTED_FONT_LICENSE_SHA256 = "56ba157a3ad1be9669ea0a126c23fc999804ba6cc239c8bec3d1318a00863b8e"
-EXPECTED_JAVASCRIPT_SHA256 = {
-    "vendor/react.production.min.js": "d72610e728466bf70f27ecc9a1a14580fd8f1e75b977aa0612146cab0e80a3fe",
-    "vendor/react-dom.production.min.js": "13b1c0705b9fa93346936ed98bd4a858fea4cdacdb09e564f897c5ba6bd0943a",
+# JavaScript is text: pin the reviewed LF-normalized content so Git's checkout
+# policy cannot make the same source fail on Windows or Linux.
+EXPECTED_JAVASCRIPT_NORMALIZED_SHA256 = {
+    "vendor/react.production.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+    "vendor/react-dom.production.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
 }
 EXPECTED_VENDOR_LICENSE_SHA256 = "0fb7854dc6677ffa6d7cdbcdb1d16fc1e8f60fce7ef6932c3e63d183520a4e89"
 EXPECTED_PROJECT_LICENSE_SHA256 = "8f06502fa2aa930fd1f4b4974838b2b00d5a5f2536a6e254fec4dabd751f67b7"
@@ -220,7 +222,7 @@ def normalized_sha256(data: bytes) -> str:
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as exc:
-        raise CheckError("a required license is not valid UTF-8") from exc
+        raise CheckError("a required text asset is not valid UTF-8") from exc
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     return build_standalone.sha256(normalized.encode("utf-8"))
 
@@ -252,9 +254,9 @@ def check_distribution_licenses(artifact_text: str, decoded: dict[str, bytes]) -
         if path not in parser.anchor_paths:
             raise CheckError(f"standalone has no user-visible anchor for required license {path}")
 
-    if set(EXPECTED_JAVASCRIPT_SHA256).issubset(decoded):
-        for path, expected_sha in EXPECTED_JAVASCRIPT_SHA256.items():
-            if build_standalone.sha256(decoded[path]) != expected_sha:
+    if set(EXPECTED_JAVASCRIPT_NORMALIZED_SHA256).issubset(decoded):
+        for path, expected_sha in EXPECTED_JAVASCRIPT_NORMALIZED_SHA256.items():
+            if normalized_sha256(decoded[path]) != expected_sha:
                 raise CheckError(f"vendored JavaScript differs from reviewed binary: {path}")
         if normalized_sha256(decoded[build_standalone.VENDOR_LICENSE_REL]) != EXPECTED_VENDOR_LICENSE_SHA256:
             raise CheckError("vendor/LICENSES.txt differs from reviewed React and Modernizr notices")

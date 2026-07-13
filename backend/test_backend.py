@@ -6,6 +6,7 @@ import base64
 import csv
 import http.client
 import io
+import itertools
 import json
 import os
 import re
@@ -37,9 +38,12 @@ def get(url):
         return r.status, json.loads(r.read())
 
 
+_TTS_FRAME_COUNTER = itertools.count(1)
+
+
 def tts_body(dev, state, decoded=False):
     up = {
-        "f_port": 1, "f_cnt": 7,
+        "f_port": 1, "f_cnt": next(_TTS_FRAME_COUNTER),
         "received_at": datetime.now(timezone.utc).isoformat(),
         "frm_payload": base64.b64encode(dp.encode_uplink(state)).decode(),
         "rx_metadata": [{"rssi": -97, "snr": 8.2}],
@@ -324,6 +328,7 @@ class BackendTest(unittest.TestCase):
         self.assertEqual(after["uplinks"], before["uplinks"] + 1)
         conflict = tts_body("bg-n08", dict(STATE, n_pest=3, action="LOG"))
         conflict["uplink_message"]["received_at"] = body["uplink_message"]["received_at"]
+        conflict["uplink_message"]["f_cnt"] = body["uplink_message"]["f_cnt"]
         conflict["uplink_message"]["session_key_id"] = "session-a"
         with self.assertRaises(urllib.error.HTTPError) as cm:
             self.hook(conflict)

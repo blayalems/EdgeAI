@@ -109,6 +109,12 @@ class StandaloneToolsTest(unittest.TestCase):
             rewritten.encode("utf-8"),
         )
 
+    def test_reviewed_text_hash_is_line_ending_stable(self) -> None:
+        self.assertEqual(
+            check_standalone.normalized_sha256(b"first\r\nsecond\r"),
+            check_standalone.normalized_sha256(b"first\nsecond\n"),
+        )
+
     def test_checker_detects_stale_source(self) -> None:
         self.build()
         (self.root / "support.js").write_text("window.supportReady=false;", encoding="utf-8")
